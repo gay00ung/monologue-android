@@ -1,0 +1,7 @@
+/build
+.gradle/
+build/
+.idea/
+*.iml
+
+/app/android-key.keystore
