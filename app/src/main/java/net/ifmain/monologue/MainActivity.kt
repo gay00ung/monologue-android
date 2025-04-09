@@ -1,47 +1,59 @@
 package net.ifmain.monologue
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import net.ifmain.monologue.data.DiaryEntry
+import net.ifmain.monologue.data.DiaryUiState
+import net.ifmain.monologue.ui.screen.DiaryListScreen
+import net.ifmain.monologue.ui.screen.HomeScreen
 import net.ifmain.monologue.ui.theme.MonologueTheme
+import net.ifmain.monologue.viewmodel.DiaryViewModel
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MonologueTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                StartNavigation(
+                    diaryUiState = DiaryUiState(),
+                    diaryViewModel = DiaryViewModel()
+                )
             }
         }
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun StartNavigation(
+    diaryUiState: DiaryUiState,
+    diaryViewModel: DiaryViewModel
+) {
+    val navController = rememberNavController()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MonologueTheme {
-        Greeting("Android")
+    NavHost(
+        navController = navController,
+        startDestination = "home_screen"
+    ) {
+        composable("home_screen") {
+            HomeScreen(
+                uiState = diaryUiState,
+                onTextChange = { diaryViewModel.onTextChange(it) },
+                onMoodSelect = { diaryViewModel.onMoodSelect(it) },
+                onAnalyzeClick = { diaryViewModel.onAnalyzeClick() },
+                onSaveClick = { diaryViewModel.onSaveClick() },
+                onNavigateToDiaryList = { navController.navigate("diary_list_screen") }
+            )
+        }
     }
 }

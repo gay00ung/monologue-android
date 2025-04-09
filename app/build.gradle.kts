@@ -18,6 +18,16 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        register("release") {
+            storeFile = file("android-key.keystore")
+            storePassword = project.findProperty("KEYSTORE_PASSWORD")?.toString()
+            keyAlias = project.findProperty("KEY_ALIAS")?.toString()
+            keyPassword = project.findProperty("KEY_PASSWORD")?.toString()
+            enableV4Signing = true
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -25,6 +35,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            signingConfig = signingConfigs["release"]
+            isDebuggable = false
         }
     }
     compileOptions {
@@ -56,4 +69,47 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    implementation(libs.androidx.navigation.compose)
+
+    // Room
+    val room_version = "2.6.1"
+
+    implementation("androidx.room:room-runtime:$room_version")
+    annotationProcessor("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+    implementation("androidx.room:room-rxjava2:$room_version")
+    implementation("androidx.room:room-rxjava3:$room_version")
+    implementation("androidx.room:room-guava:$room_version")
+    testImplementation("androidx.room:room-testing:$room_version")
+    implementation("androidx.room:room-paging:$room_version")
+
+}
+
+androidComponents {
+    onVariants { variant ->
+        val versionName = android.defaultConfig.versionName
+        variant.outputs.forEach { output ->
+            if (output is com.android.build.api.variant.impl.VariantOutputImpl) {
+                output.outputFileName = "monologue_${versionName}.apk"
+            }
+        }
+
+        tasks.configureEach {
+            if (name == "bundle${variant.name.capitalize()}") {
+                doLast {
+                    val aabDir = file("${buildDir}/outputs/bundle/${variant.name}/")
+                    val aabFile = aabDir.listFiles()?.find { it.extension == "aab" }
+
+                    if (aabFile != null) {
+                        val newAabFile = File(aabDir, "monologue_${versionName}.aab")
+                        aabFile.renameTo(newAabFile)
+                        println("✅ AAB renamed to: ${newAabFile.name}")
+                    } else {
+                        println("⚠️ No AAB file found in ${aabDir.path}")
+                    }
+                }
+            }
+        }
+    }
 }
