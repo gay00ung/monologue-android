@@ -9,6 +9,9 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface DiaryApi {
+    @POST("users")
+    suspend fun postUser(@Body user: UserEntryDto): Response<Unit>
+
     @POST("diary")
     suspend fun postDiary(@Body entry: DiaryEntryDto): Response<Unit>
 
@@ -22,11 +25,3 @@ val retrofit: Retrofit = Retrofit.Builder()
     .build()
 
 val api: DiaryApi = retrofit.create(DiaryApi::class.java)
-
-
-data class DiaryEntryDto(
-    val date: String,
-    val text: String,
-    val mood: String?,
-    val userId: String
-)
