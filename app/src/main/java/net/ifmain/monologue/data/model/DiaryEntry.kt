@@ -1,4 +1,4 @@
-package net.ifmain.monologue.data
+package net.ifmain.monologue.data.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -10,4 +10,3 @@ data class DiaryEntry(
     val mood: String?,
     val isSynced: Boolean = false
 )
-

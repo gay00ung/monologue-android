@@ -1,51 +1,42 @@
 package net.ifmain.monologue.ui.screen.auth
 
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.LightGray
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import net.ifmain.monologue.ui.component.InputCard
 import net.ifmain.monologue.ui.component.InputTextField
 import net.ifmain.monologue.ui.component.TitleBar
 import net.ifmain.monologue.ui.theme.Cream
 import net.ifmain.monologue.ui.theme.Honey
-import net.ifmain.monologue.ui.theme.Lemon
 import net.ifmain.monologue.viewmodel.SignUpViewModel
 
 @Composable
 fun SignUpScreen(
-    viewModel: SignUpViewModel,
-    onSignUpClick: () -> Unit
+    viewModel: SignUpViewModel = hiltViewModel(),
+    onNavigateToMain: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
@@ -95,14 +86,20 @@ fun SignUpScreen(
                         onClick = {
                             when {
                                 viewModel.hasEmptyFields() -> {
-                                    Toast.makeText(context, "모든 항목을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "모든 항목을 입력해주세요.", Toast.LENGTH_SHORT)
+                                        .show()
                                 }
 
                                 else -> {
                                     viewModel.signUp(
-                                        onSuccess = { onSignUpClick() },
+                                        onSuccess = {
+                                            onNavigateToMain()
+                                            Toast.makeText(context, "회원가입 성공!", Toast.LENGTH_SHORT)
+                                                .show()
+                                        },
                                         onError = { errorMsg ->
-                                            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT)
+                                                .show()
                                         }
                                     )
                                 }
@@ -118,21 +115,12 @@ fun SignUpScreen(
                         shape = MaterialTheme.shapes.large
                     ) {
                         Text(
-                            text = "회원가입 완료",
+                            text = "회원가입",
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
                 }
             }
         }
-    )
-}
-
-@Preview
-@Composable
-fun SignUpScreenPreview() {
-    SignUpScreen(
-        viewModel = SignUpViewModel(),
-        onSignUpClick = {}
     )
 }

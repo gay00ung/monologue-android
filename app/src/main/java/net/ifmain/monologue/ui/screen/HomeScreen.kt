@@ -26,7 +26,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import net.ifmain.monologue.data.DiaryUiState
+import net.ifmain.monologue.data.model.DiaryUiState
 import net.ifmain.monologue.ui.component.TitleBar
 import net.ifmain.monologue.ui.theme.Cream
 import net.ifmain.monologue.ui.theme.Honey

@@ -4,9 +4,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import net.ifmain.monologue.data.DiaryUiState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import net.ifmain.monologue.data.model.DiaryUiState
+import javax.inject.Inject
 
-class DiaryViewModel : ViewModel() {
+@HiltViewModel
+class DiaryViewModel @Inject constructor() : ViewModel() {
     var uiState by mutableStateOf(DiaryUiState())
         private set
 

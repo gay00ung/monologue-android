@@ -1,4 +1,4 @@
-package net.ifmain.monologue.data
+package net.ifmain.monologue.data.model
 
 data class UserResponse(
     val id: String,

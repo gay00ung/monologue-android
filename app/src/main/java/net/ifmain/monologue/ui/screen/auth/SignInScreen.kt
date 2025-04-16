@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import net.ifmain.monologue.ui.component.InputCard
 import net.ifmain.monologue.ui.component.InputTextField
 import net.ifmain.monologue.ui.component.TitleBar
@@ -36,7 +37,7 @@ import net.ifmain.monologue.viewmodel.SignInViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignInScreen(
-    viewModel: SignInViewModel,
+    viewModel: SignInViewModel = hiltViewModel(),
     onSignInClick: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
@@ -115,14 +116,5 @@ fun SignInScreen(
                 }
             }
         }
-    )
-}
-
-@Preview
-@Composable
-fun SignInScreenPreview() {
-    SignInScreen(
-        viewModel = SignInViewModel(),
-        onSignInClick = {}
     )
 }

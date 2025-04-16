@@ -6,11 +6,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import net.ifmain.monologue.data.UserEntryDto
-import net.ifmain.monologue.data.api
+import net.ifmain.monologue.data.api.DiaryApi
+import net.ifmain.monologue.data.model.UserEntryDto
+import net.ifmain.monologue.data.preference.UserPreferenceManager
+import javax.inject.Inject
 
-class SignUpViewModel : ViewModel() {
+@HiltViewModel
+class SignUpViewModel @Inject constructor(
+    private val userPrefs: UserPreferenceManager,
+    private val api: DiaryApi,
+) : ViewModel() {
     var email by mutableStateOf("")
     var username by mutableStateOf("")
     var password by mutableStateOf("")
@@ -43,12 +50,12 @@ class SignUpViewModel : ViewModel() {
                 )
 
                 if (response.isSuccessful) {
+                    userPrefs.saveUserInfo(email, password)
                     onSuccess()
                 } else {
                     onError("회원가입에 실패했습니다. (${response.code()})")
                 }
             } catch (e: Exception) {
-//                onError("에러 발생: ${e.localizedMessage}")
                 Log.d("SignUpViewModel", "Error: ${e.localizedMessage}")
             }
         }
@@ -66,5 +73,4 @@ class SignUpViewModel : ViewModel() {
     fun hasEmptyFields(): Boolean {
         return email.isBlank() || username.isBlank() || password.isBlank() || confirmPassword.isBlank()
     }
-
 }
