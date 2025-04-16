@@ -20,7 +20,7 @@ interface DiaryApi {
 }
 
 val retrofit: Retrofit = Retrofit.Builder()
-    .baseUrl("http://localhost:8080/")
+    .baseUrl("http://192.168.45.196:8080/")
     .addConverterFactory(GsonConverterFactory.create())
     .build()
 

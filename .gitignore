@@ -30,3 +30,4 @@ Thumbs.db
 /app/android-key.keystore
 gradle.properties
 app/google-services.json
+app/src/main/res/xml/network_security_config.xml

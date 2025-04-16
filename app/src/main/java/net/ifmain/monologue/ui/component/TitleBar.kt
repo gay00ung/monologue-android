@@ -6,15 +6,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import net.ifmain.monologue.R
 import net.ifmain.monologue.ui.theme.Honey
 
 @Composable
 fun TitleBar() {
+    val appName = stringResource(R.string.app_name)
+
     Text(
-        text = "모노로그 📝",
+        text = appName,
         modifier = Modifier.fillMaxWidth().padding(top = 32.dp),
         style = MaterialTheme.typography.headlineLarge,
         textAlign = TextAlign.Center,
