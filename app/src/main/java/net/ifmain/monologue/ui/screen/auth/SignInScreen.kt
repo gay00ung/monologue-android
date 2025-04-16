@@ -1,5 +1,6 @@
 package net.ifmain.monologue.ui.screen.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,6 +40,7 @@ fun SignInScreen(
     onSignInClick: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
 
     Scaffold(
         containerColor = Cream,
@@ -70,7 +73,31 @@ fun SignInScreen(
                     }
 
                     Button(
-                        onClick = onSignInClick,
+                        onClick = {
+                            when {
+                                viewModel.hasEmptyFields() -> {
+                                    Toast.makeText(context, "모든 항목을 입력해주세요.", Toast.LENGTH_SHORT)
+                                        .show()
+                                }
+
+                                else -> {
+                                    viewModel.signIn(
+                                        onSuccess = { name ->
+                                            Toast.makeText(
+                                                context,
+                                                "${name}님 환영합니다!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            onSignInClick()
+                                        },
+                                        onError = { errorMsg ->
+                                            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT)
+                                                .show()
+                                        }
+                                    )
+                                }
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 8.dp),

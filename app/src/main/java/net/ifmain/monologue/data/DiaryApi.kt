@@ -9,13 +9,17 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface DiaryApi {
-    @POST("users")
-    suspend fun postUser(@Body user: UserEntryDto): Response<Unit>
+    @POST("/api/users/signup")
+    suspend fun postSignUp(@Body user: UserEntryDto): Response<UserResponse>
 
-    @POST("diary")
+    @POST("api/users/login")
+    suspend fun postSignIn(@Body request: UserDto): Response<UserResponse>
+
+
+    @POST("/api/diary")
     suspend fun postDiary(@Body entry: DiaryEntryDto): Response<Unit>
 
-    @GET("diary")
+    @GET("/api/diary")
     suspend fun getDiaries(@Query("user_id") userId: String): List<DiaryEntryDto>
 }
 

@@ -34,7 +34,7 @@ class SignUpViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                val response = api.postUser(
+                val response = api.postSignUp(
                     UserEntryDto(
                         name = username,
                         email = email,
