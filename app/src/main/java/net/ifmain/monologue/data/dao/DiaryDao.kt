@@ -14,4 +14,10 @@ interface DiaryDao {
 
     @Query("SELECT * FROM diary_entries ORDER BY date DESC")
     fun getAll(): Flow<List<DiaryEntry>>
+
+    @Query("UPDATE diary_entries SET isSynced = 1 WHERE date = :date")
+    suspend fun markAsSynced(date: String)
+
+    @Query("SELECT * FROM diary_entries WHERE isSynced = 0")
+    fun getUnsynced(): List<DiaryEntry>
 }

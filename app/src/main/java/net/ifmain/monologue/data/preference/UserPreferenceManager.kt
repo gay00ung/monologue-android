@@ -14,13 +14,22 @@ class UserPreferenceManager @Inject constructor(private val context: Context) {
 
     val userInfoFlow: Flow<Pair<String?, String?>> = dataStore.data
         .map { prefs ->
+            val userId = prefs[UserPreferenceKeys.USER_ID]
+            val name = prefs[UserPreferenceKeys.USER_NAME]
             val email = prefs[UserPreferenceKeys.USER_EMAIL]
             val password = prefs[UserPreferenceKeys.USER_PASSWORD]
             Pair(email, password)
         }
 
-    suspend fun saveUserInfo(email: String, password: String) {
+    suspend fun saveUserInfo(
+        userId: String,
+        name: String,
+        email: String,
+        password: String
+    ) {
         dataStore.edit { prefs ->
+            prefs[UserPreferenceKeys.USER_ID] = userId
+            prefs[UserPreferenceKeys.USER_NAME] = name
             prefs[UserPreferenceKeys.USER_EMAIL] = email
             prefs[UserPreferenceKeys.USER_PASSWORD] = password
         }

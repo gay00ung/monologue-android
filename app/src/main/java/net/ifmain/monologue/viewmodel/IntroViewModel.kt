@@ -19,18 +19,20 @@ class IntroViewModel @Inject constructor(
 ) : ViewModel() {
     var isButtonVisible = mutableStateOf(false)
         private set
+    var userId by mutableStateOf("")
     var userName by mutableStateOf("")
 
-    fun checkAutoLogin(onAutoLoginSuccess: (String) -> Unit, onLoginFail: () -> Unit) {
+    fun checkAutoLogin(onAutoLoginSuccess: (String, String) -> Unit, onLoginFail: () -> Unit) {
         viewModelScope.launch {
             userPrefs.userInfoFlow.collect { (email, password) ->
                 if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
                     try {
-                        val response = api.postSignIn(UserDto(email, password))
+                        val response = api.postSignIn(UserDto(userId, userName, email, password))
                         if (response.isSuccessful && response.body() != null) {
                             val body = response.body()
+                            userId = body?.id.toString()
                             userName = body?.name.toString()
-                            onAutoLoginSuccess(userName)
+                            onAutoLoginSuccess(userName, userId)
                         } else {
                             isButtonVisible.value = true
                             onLoginFail()

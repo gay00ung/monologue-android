@@ -38,7 +38,7 @@ import net.ifmain.monologue.viewmodel.SignInViewModel
 @Composable
 fun SignInScreen(
     viewModel: SignInViewModel = hiltViewModel(),
-    onSignInClick: () -> Unit
+    onSignInClick: (name: String, userId: String) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
@@ -89,7 +89,7 @@ fun SignInScreen(
                                                 "${name}님 환영합니다!",
                                                 Toast.LENGTH_SHORT
                                             ).show()
-                                            onSignInClick()
+                                            onSignInClick(name, viewModel.userId)
                                         },
                                         onError = { errorMsg ->
                                             Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT)

@@ -1,6 +1,7 @@
 package net.ifmain.monologue.ui.screen
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +33,7 @@ import net.ifmain.monologue.ui.theme.Cream
 import net.ifmain.monologue.ui.theme.Honey
 import net.ifmain.monologue.ui.theme.Lemon
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.platform.LocalContext
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -40,9 +42,10 @@ fun HomeScreen(
     onTextChange: (String) -> Unit,
     onMoodSelect: (String) -> Unit,
     onAnalyzeClick: () -> Unit,
-    onSaveClick: () -> Unit,
+    onSaveClick: (String?, String) -> Unit,
     onNavigateToDiaryList: () -> Unit,
 ) {
+    val context = LocalContext.current
     val moods = listOf("😊", "😐", "😢", "😡", "😴", "😍", "❓")
 
     Scaffold (
@@ -115,8 +118,16 @@ fun HomeScreen(
 //            }
 
             Button(
-                onClick = onSaveClick,
-                enabled = uiState.text.isNotBlank(),
+                onClick = {
+                    if (uiState.selectedMood.isBlank()) {
+                        Toast.makeText(context, "감정을 선택해 주세요", Toast.LENGTH_SHORT).show()
+                    } else {
+                        val textToSave = if (uiState.text.isBlank()) "기록없음" else uiState.text
+                        onSaveClick(uiState.selectedMood, textToSave)
+                        Toast.makeText(context, "저장되었습니다!", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                enabled = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Lemon,
@@ -127,22 +138,4 @@ fun HomeScreen(
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun HomeScreenPreview() {
-    val uiState = DiaryUiState(
-        text = "오늘은 정말 좋은 날이었어요!",
-        selectedMood = "😊"
-    )
-
-    HomeScreen(
-        uiState = uiState,
-        onTextChange = {},
-        onMoodSelect = {},
-        onAnalyzeClick = {},
-        onSaveClick = {},
-        onNavigateToDiaryList = { /* TODO */ }
-    )
 }
