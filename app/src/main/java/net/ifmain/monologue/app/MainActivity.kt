@@ -12,12 +12,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import net.ifmain.monologue.data.model.DiaryUiState
-import net.ifmain.monologue.ui.screen.HomeScreen
+import net.ifmain.monologue.ui.screen.DiaryHomeScreen
 import net.ifmain.monologue.ui.screen.IntroScreen
 import net.ifmain.monologue.ui.screen.auth.SignInScreen
 import net.ifmain.monologue.ui.screen.auth.SignUpScreen
@@ -35,9 +37,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MonologueTheme {
-                StartNavigation(
-                    diaryUiState = DiaryUiState()
-                )
+                StartNavigation()
             }
         }
     }
@@ -46,7 +46,6 @@ class MainActivity : ComponentActivity() {
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun StartNavigation(
-    diaryUiState: DiaryUiState
 ) {
     val navController = rememberNavController()
     var userId by remember { mutableStateOf<String?>(null) }
@@ -62,7 +61,7 @@ fun StartNavigation(
                 onSignUpClick = { navController.navigate("sign_up_screen") },
                 onNavigateToMain = { name, id ->
                     userId = id
-                    navController.navigate("home_screen")
+                    navController.navigate("diary_home_screen")
                 },
                 viewModel = introViewModel
             )
@@ -74,7 +73,7 @@ fun StartNavigation(
                 viewModel = signInViewModel,
                 onSignInClick = { name, id ->
                     userId = id
-                    navController.navigate("home_screen")
+                    navController.navigate("diary_home_screen")
                 }
             )
         }
@@ -85,17 +84,17 @@ fun StartNavigation(
                 viewModel = signUpViewModel,
                 onNavigateToMain = { name, id ->
                     userId = id
-                    navController.navigate("home_screen")
+                    navController.navigate("diary_home_screen")
                 },
             )
         }
-        composable("home_screen") {
+        composable("diary_home_screen") {
             val diaryViewModel: DiaryViewModel = hiltViewModel()
             diaryViewModel.userId = userId ?: ""
-            HomeScreen(
-                uiState = diaryUiState,
-                onTextChange = { diaryViewModel.onTextChange(it) },
-                onMoodSelect = { diaryViewModel.onMoodSelect(it) },
+            DiaryHomeScreen(
+                viewModel = diaryViewModel,
+                onTextChange = diaryViewModel::onTextChange,
+                onMoodSelect = diaryViewModel::onMoodSelect,
                 onAnalyzeClick = { diaryViewModel.onAnalyzeClick() },
                 onSaveClick = { selectedMood, textToSave ->
                     diaryViewModel.onSaveClick(
@@ -106,7 +105,6 @@ fun StartNavigation(
                             println("Successfully saved!")
                         }
                     )
-                    diaryViewModel.saveDiary(diaryUiState, userId.toString())
                 },
                 onNavigateToDiaryList = { navController.navigate("diary_list_screen") }
             )

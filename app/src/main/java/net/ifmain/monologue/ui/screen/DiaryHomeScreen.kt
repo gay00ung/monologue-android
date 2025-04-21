@@ -1,6 +1,7 @@
 package net.ifmain.monologue.ui.screen
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.ifmain.monologue.data.model.DiaryUiState
@@ -33,22 +33,29 @@ import net.ifmain.monologue.ui.theme.Cream
 import net.ifmain.monologue.ui.theme.Honey
 import net.ifmain.monologue.ui.theme.Lemon
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color.Companion.LightGray
 import androidx.compose.ui.platform.LocalContext
+import net.ifmain.monologue.viewmodel.DiaryViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun HomeScreen(
-    uiState: DiaryUiState,
+fun DiaryHomeScreen(
+    viewModel: DiaryViewModel,
     onTextChange: (String) -> Unit,
     onMoodSelect: (String) -> Unit,
     onAnalyzeClick: () -> Unit,
     onSaveClick: (String?, String) -> Unit,
     onNavigateToDiaryList: () -> Unit,
 ) {
+    val uiState = viewModel.uiState
     val context = LocalContext.current
     val moods = listOf("😊", "😐", "😢", "😡", "😴", "😍", "❓")
 
-    Scaffold (
+    Scaffold(
         containerColor = Cream,
         topBar = {
             TitleBar()
@@ -70,9 +77,17 @@ fun HomeScreen(
 
             OutlinedTextField(
                 value = uiState.text,
-                onValueChange = onTextChange,
+                onValueChange = {onTextChange(it)
+                                Log.d("DiaryHomeScreen", "Text changed: $it")
+                },
+
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("오늘 하루를 한 줄로 남겨보세요") },
+                placeholder = {
+                    Text(
+                        text = "오늘 하루를 한 줄로 남겨보세요",
+                        style = TextStyle(color = LightGray)
+                    )
+                },
                 maxLines = 3,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Lemon,
@@ -100,7 +115,10 @@ fun HomeScreen(
                                 else Color.Transparent
                             )
                             .padding(8.dp)
-                            .clickable { onMoodSelect(mood) }
+                            .clickable {
+                                Log.d("DiaryHomeScreen", "Mood clicked: $mood")
+                                onMoodSelect(mood)
+                            }
                     )
                 }
             }
