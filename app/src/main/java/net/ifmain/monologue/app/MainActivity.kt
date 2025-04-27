@@ -2,24 +2,25 @@ package net.ifmain.monologue.app
 
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
-import net.ifmain.monologue.data.model.DiaryUiState
-import net.ifmain.monologue.ui.screen.DiaryHomeScreen
+import net.ifmain.monologue.ui.screen.DiaryScreen
 import net.ifmain.monologue.ui.screen.DiaryListScreen
 import net.ifmain.monologue.ui.screen.IntroScreen
 import net.ifmain.monologue.ui.screen.auth.SignInScreen
@@ -29,6 +30,8 @@ import net.ifmain.monologue.viewmodel.DiaryViewModel
 import net.ifmain.monologue.viewmodel.IntroViewModel
 import net.ifmain.monologue.viewmodel.SignInViewModel
 import net.ifmain.monologue.viewmodel.SignUpViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.getValue
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -50,6 +53,8 @@ fun StartNavigation(
 ) {
     val navController = rememberNavController()
     var userId by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    var backPressedTime by remember { mutableLongStateOf(0L) }
 
     NavHost(
         navController = navController,
@@ -60,9 +65,17 @@ fun StartNavigation(
             IntroScreen(
                 onSignInClick = { navController.navigate("sign_in_screen") },
                 onSignUpClick = { navController.navigate("sign_up_screen") },
-                onNavigateToMain = { name, id ->
+                onNavigateToDiaryScreen = { name, id ->
                     userId = id
-                    navController.navigate("diary_home_screen")
+                    navController.navigate("diary_write_screen") {
+                        popUpTo("diary_write_screen") { inclusive = true }
+                    }
+                },
+                onNavigateToDiaryList = { name, id ->
+                    userId = id
+                    navController.navigate("diary_list_screen") {
+                        popUpTo("diary_list_screen") { inclusive = true }
+                    }
                 },
                 viewModel = introViewModel
             )
@@ -89,11 +102,11 @@ fun StartNavigation(
                 },
             )
         }
-        composable("diary_home_screen") {
+        composable("diary_write_screen") {
             val diaryViewModel: DiaryViewModel = hiltViewModel()
             diaryViewModel.userId = userId ?: ""
             diaryViewModel.syncOfflineEntries()
-            DiaryHomeScreen(
+            DiaryScreen(
                 viewModel = diaryViewModel,
                 onTextChange = diaryViewModel::onTextChange,
                 onMoodSelect = diaryViewModel::onMoodSelect,
@@ -118,11 +131,49 @@ fun StartNavigation(
 
             DiaryListScreen(
                 viewModel = diaryViewModel,
-                onEntryClick = { entry ->
-//                    navController.navigate("diary_detail_screen/${entry.date}")
+                onNavigateToDiaryDetail = { entry ->
+                    navController.navigate("diary_detail_screen/${entry.date}")
                 }
             )
         }
 
+        composable("diary_detail_screen/{date}") { backStackEntry ->
+            val date = backStackEntry.arguments!!.getString("date")!!
+            val diaryViewModel: DiaryViewModel = hiltViewModel()
+            diaryViewModel.userId = userId ?: ""
+            val entries by diaryViewModel.entries.collectAsStateWithLifecycle(initialValue = emptyList())
+            val diaryEntry = entries.firstOrNull { it.date == date }
+
+            DiaryScreen(
+                diaryEntry = diaryEntry,
+                viewModel = diaryViewModel,
+                onTextChange = diaryViewModel::onTextChange,
+                onMoodSelect = diaryViewModel::onMoodSelect,
+                onAnalyzeClick = { diaryViewModel.onAnalyzeClick() },
+                onSaveClick = { _, _ ->
+                    diaryViewModel.updateDiary(diaryViewModel.uiState, diaryViewModel.userId, date)
+                    navController.popBackStack()
+                },
+                onNavigateToDiaryList = { navController.popBackStack() }
+            )
+        }
+    }
+
+    BackHandler {
+        val currentTime = System.currentTimeMillis()
+        when (navController.currentDestination?.route) {
+            "intro_screen", "diary_write_screen", "diary_list_screen" -> {
+                if (currentTime - backPressedTime < 2000) {
+                    (context as? ComponentActivity)?.finish()
+                } else {
+                    Toast.makeText(context, "뒤로가기를 한 번 더 누르면 앱이 종료됩니다.", Toast.LENGTH_SHORT).show()
+                    backPressedTime = currentTime
+                }
+            }
+
+            else -> {
+                navController.popBackStack()
+            }
+        }
     }
 }

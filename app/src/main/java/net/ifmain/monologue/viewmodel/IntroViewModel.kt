@@ -10,12 +10,14 @@ import kotlinx.coroutines.launch
 import net.ifmain.monologue.data.api.DiaryApi
 import net.ifmain.monologue.data.model.UserDto
 import net.ifmain.monologue.data.preference.UserPreferenceManager
+import net.ifmain.monologue.data.repository.DiaryRepository
+import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
 class IntroViewModel @Inject constructor(
     private val userPrefs: UserPreferenceManager,
-    private val api: DiaryApi,
+    private val api: DiaryApi
 ) : ViewModel() {
     var isButtonVisible = mutableStateOf(false)
         private set
@@ -32,7 +34,12 @@ class IntroViewModel @Inject constructor(
                             val body = response.body()
                             userId = body?.id.toString()
                             userName = body?.name.toString()
-                            onAutoLoginSuccess(userName, userId)
+                            val diaryExists = checkDiaryExists(userId)
+                            if (diaryExists) {
+                                onAutoLoginSuccess(userName, userId)
+                            } else {
+                                onAutoLoginSuccess(userName, userId)
+                            }
                         } else {
                             isButtonVisible.value = true
                             onLoginFail()
@@ -45,6 +52,17 @@ class IntroViewModel @Inject constructor(
                     isButtonVisible.value = true
                 }
             }
+        }
+    }
+
+    suspend fun checkDiaryExists(userId: String): Boolean {
+        val todayDate = LocalDate.now().toString()
+        return try {
+            val diaries = api.getDiaries(userId)
+            diaries.any { it.date == todayDate }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
         }
     }
 }
