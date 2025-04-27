@@ -8,7 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import net.ifmain.monologue.data.api.DiaryApi
 import net.ifmain.monologue.data.model.DiaryEntry
+import net.ifmain.monologue.data.model.DiaryEntryDto
 import net.ifmain.monologue.data.model.DiaryUiState
 import net.ifmain.monologue.data.repository.DiaryRepository
 import java.time.LocalDate
@@ -57,8 +59,13 @@ class DiaryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                saveDiary(uiState, currentUserId)
-                onSuccess()
+                val entryExists = repository.checkDiaryExists(currentUserId)
+                if (entryExists) {
+                    onError("오늘은 이미 등록하셨습니다. 저장된 내용을 수정하시겠어요?")
+                } else {
+                    saveDiary(uiState, currentUserId)
+                    onSuccess()
+                }
             } catch (e: Exception) {
                 onError("저장 중 오류가 발생했습니다.")
                 Log.e("DiaryViewModel", "Error saving diary", e)
@@ -80,13 +87,44 @@ class DiaryViewModel @Inject constructor(
         try {
             repository.saveEntry(entry, userId)
             Log.d("DiaryViewModel", "Diary saved successfully!")
+            // TODO: 저장 후 UI 업데이트 및 새로운 화면으로 이동
         } catch (e: Exception) {
             Log.e("DiaryViewModel", "Error saving diary", e)
         }
     }
 
+    fun updateDiary(uiState: DiaryUiState, userId: String) {
+        val today = LocalDate.now().toString()
+        val entry = DiaryEntry(
+            date = today,
+            text = if (uiState.text.isBlank()) "기록 없음" else uiState.text,
+            mood = uiState.selectedMood,
+            isSynced = false
+        )
+
+        viewModelScope.launch {
+            try {
+                val response = repository.api.updateDiary(DiaryEntryDto(
+                    date = entry.date,
+                    text = entry.text,
+                    mood = entry.mood,
+                    userId = userId
+                ))
+
+                if (response.isSuccessful) {
+                    Log.d("DiaryViewModel", "Diary updated successfully!")
+                    // TODO: 저장 후 UI 업데이트 및 새로운 화면으로 이동
+                } else {
+                    Log.e("DiaryViewModel", "Error updating diary: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                Log.e("DiaryViewModel", "Error updating diary", e)
+            }
+        }
+    }
+
     fun onAnalyzeClick() {
-        // 감정 분석 API 호출 후 상태 업데이트
+        // TODO: 감정 분석 API 호출 후 상태 업데이트
     }
 
 }

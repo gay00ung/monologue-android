@@ -8,6 +8,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Query
 
 interface DiaryApi {
@@ -19,6 +20,9 @@ interface DiaryApi {
 
     @POST("/api/diary")
     suspend fun postDiary(@Body entry: DiaryEntryDto): Response<Unit>
+
+    @PUT("/api/diary")
+    suspend fun updateDiary(@Body entry: DiaryEntryDto): Response<Unit>
 
     @GET("/api/diary")
     suspend fun getDiaries(@Query("user_id") userId: String): List<DiaryEntryDto>

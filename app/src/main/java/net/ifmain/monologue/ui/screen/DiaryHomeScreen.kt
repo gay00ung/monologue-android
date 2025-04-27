@@ -33,12 +33,20 @@ import net.ifmain.monologue.ui.theme.Cream
 import net.ifmain.monologue.ui.theme.Honey
 import net.ifmain.monologue.ui.theme.Lemon
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.Color.Companion.LightGray
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 import net.ifmain.monologue.viewmodel.DiaryViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -54,6 +62,7 @@ fun DiaryHomeScreen(
     val uiState = viewModel.uiState
     val context = LocalContext.current
     val moods = listOf("😊", "😐", "😢", "😡", "😴", "😍", "❓")
+    var showDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Cream,
@@ -77,8 +86,9 @@ fun DiaryHomeScreen(
 
             OutlinedTextField(
                 value = uiState.text,
-                onValueChange = {onTextChange(it)
-                                Log.d("DiaryHomeScreen", "Text changed: $it")
+                onValueChange = {
+                    onTextChange(it)
+                    Log.d("DiaryHomeScreen", "Text changed: $it")
                 },
 
                 modifier = Modifier.fillMaxWidth(),
@@ -140,9 +150,18 @@ fun DiaryHomeScreen(
                     if (uiState.selectedMood.isBlank()) {
                         Toast.makeText(context, "감정을 선택해 주세요", Toast.LENGTH_SHORT).show()
                     } else {
-                        val textToSave = if (uiState.text.isBlank()) "기록없음" else uiState.text
-                        onSaveClick(uiState.selectedMood, textToSave)
-                        Toast.makeText(context, "저장되었습니다!", Toast.LENGTH_SHORT).show()
+                        viewModel.onSaveClick(
+                            onError = { errorMessage ->
+                                if (errorMessage.contains("이미 등록하셨습니다")) {
+                                    showDialog = true
+                                } else {
+                                    Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            onSuccess = {
+                                Toast.makeText(context, "저장되었습니다!", Toast.LENGTH_SHORT).show()
+                            }
+                        )
                     }
                 },
                 enabled = true,
@@ -153,6 +172,82 @@ fun DiaryHomeScreen(
                 )
             ) {
                 Text("📂저장하기")
+            }
+
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false },
+                    shape = RoundedCornerShape(16.dp),
+                    containerColor = Cream,
+                    icon = {
+                        Text(
+                            text = "📝",
+                            fontSize = MaterialTheme.typography.headlineLarge.fontSize,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    title = {
+                        Text(
+                            text = "오늘은 이미 등록하셨습니다.",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = Lemon,
+                                textAlign = TextAlign.Center
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = "저장된 내용을 수정하시겠어요?",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                color = Color.DarkGray,
+                                textAlign = TextAlign.Center
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel.updateDiary(uiState, viewModel.userId)
+                                Toast.makeText(context, "수정되었습니다!", Toast.LENGTH_SHORT).show()
+                                showDialog = false
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.padding(8.dp),
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = Color.White,
+                                containerColor = Lemon
+                            )
+                        ) {
+                            Text(
+                                text = "확인",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { showDialog = false },
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.padding(8.dp),
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = Color(0xFF9E9E9E), // 회색 버튼 색상
+                                containerColor = Color.Transparent
+                            )
+                        ) {
+                            Text(
+                                text = "취소",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        }
+                    }
+                )
             }
         }
     }
