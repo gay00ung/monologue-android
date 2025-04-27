@@ -26,7 +26,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun DiaryListScreen(
     viewModel: DiaryViewModel,
-    onEntryClick: (DiaryEntry) -> Unit
+    onNavigateToDiaryDetail: (DiaryEntry) -> Unit
 ) {
     val entries by viewModel.entries.collectAsStateWithLifecycle()
 
@@ -44,7 +44,7 @@ fun DiaryListScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(entries) { entry ->
-                DiaryCard(entry = entry, onEntryClick = onEntryClick)
+                DiaryCard(entry = entry, onEntryClick = onNavigateToDiaryDetail)
             }
         }
     }

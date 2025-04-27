@@ -129,9 +129,17 @@ fun StartNavigation(
 
             DiaryListScreen(
                 viewModel = diaryViewModel,
-                onEntryClick = { entry ->
-//                    navController.navigate("diary_detail_screen/${entry.date}")
+                onNavigateToDiaryDetail = { entry ->
+                    navController.navigate("diary_detail_screen/${entry.date}")
                 }
+            )
+        }
+
+        composable("diary_detail_screen/{date}") { backStackEntry ->
+            val date = backStackEntry.arguments?.getString("date")
+            MealDetailScreen(
+                date = date,
+                onBackClick = { navController.popBackStack() }
             )
         }
     }
@@ -152,4 +160,9 @@ fun StartNavigation(
             }
         }
     }
+}
+
+@Composable
+fun MealDetailScreen(date: String?, onBackClick: () -> Boolean) {
+    TODO("Not yet implemented")
 }
