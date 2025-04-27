@@ -2,15 +2,19 @@ package net.ifmain.monologue.app
 
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -47,6 +51,8 @@ fun StartNavigation(
 ) {
     val navController = rememberNavController()
     var userId by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    var backPressedTime by remember { mutableLongStateOf(0L) }
 
     NavHost(
         navController = navController,
@@ -59,11 +65,15 @@ fun StartNavigation(
                 onSignUpClick = { navController.navigate("sign_up_screen") },
                 onNavigateToDiaryWrite = { name, id ->
                     userId = id
-                    navController.navigate("diary_write_screen")
+                    navController.navigate("diary_write_screen") {
+                        popUpTo("diary_write_screen") { inclusive = true }
+                    }
                 },
                 onNavigateToDiaryList = { name, id ->
                     userId = id
-                    navController.navigate("diary_list_screen")
+                    navController.navigate("diary_list_screen") {
+                        popUpTo("diary_list_screen") { inclusive = true }
+                    }
                 },
                 viewModel = introViewModel
             )
@@ -124,6 +134,22 @@ fun StartNavigation(
                 }
             )
         }
+    }
 
+    BackHandler {
+        val currentTime = System.currentTimeMillis()
+        when (navController.currentDestination?.route) {
+            "intro_screen", "diary_write_screen", "diary_list_screen" -> {
+                if (currentTime - backPressedTime < 2000) {
+                    (context as? ComponentActivity)?.finish()
+                } else {
+                    Toast.makeText(context, "뒤로가기를 한 번 더 누르면 앱이 종료됩니다.", Toast.LENGTH_SHORT).show()
+                    backPressedTime = currentTime
+                }
+            }
+            else -> {
+                navController.popBackStack()
+            }
+        }
     }
 }
