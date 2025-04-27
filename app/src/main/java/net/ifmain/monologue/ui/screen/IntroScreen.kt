@@ -51,7 +51,7 @@ import net.ifmain.monologue.viewmodel.IntroViewModel
 fun IntroScreen(
     onSignInClick: () -> Unit,
     onSignUpClick: () -> Unit,
-    onNavigateToDiaryWrite: (name: String, userId: String) -> Unit,
+    onNavigateToDiaryScreen: (name: String, userId: String) -> Unit,
     onNavigateToDiaryList: (name: String, userId: String) -> Unit,
     viewModel: IntroViewModel = hiltViewModel()
 ) {
@@ -75,7 +75,7 @@ fun IntroScreen(
                     if (diaryExists) {
                         onNavigateToDiaryList(name, userId)
                     } else {
-                        onNavigateToDiaryWrite(name, userId)
+                        onNavigateToDiaryScreen(name, userId)
                     }
                 }
             },

@@ -20,7 +20,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
-import net.ifmain.monologue.ui.screen.DiaryWriteScreen
+import net.ifmain.monologue.ui.screen.DiaryScreen
 import net.ifmain.monologue.ui.screen.DiaryListScreen
 import net.ifmain.monologue.ui.screen.IntroScreen
 import net.ifmain.monologue.ui.screen.auth.SignInScreen
@@ -30,6 +30,8 @@ import net.ifmain.monologue.viewmodel.DiaryViewModel
 import net.ifmain.monologue.viewmodel.IntroViewModel
 import net.ifmain.monologue.viewmodel.SignInViewModel
 import net.ifmain.monologue.viewmodel.SignUpViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.getValue
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -63,7 +65,7 @@ fun StartNavigation(
             IntroScreen(
                 onSignInClick = { navController.navigate("sign_in_screen") },
                 onSignUpClick = { navController.navigate("sign_up_screen") },
-                onNavigateToDiaryWrite = { name, id ->
+                onNavigateToDiaryScreen = { name, id ->
                     userId = id
                     navController.navigate("diary_write_screen") {
                         popUpTo("diary_write_screen") { inclusive = true }
@@ -104,7 +106,7 @@ fun StartNavigation(
             val diaryViewModel: DiaryViewModel = hiltViewModel()
             diaryViewModel.userId = userId ?: ""
             diaryViewModel.syncOfflineEntries()
-            DiaryWriteScreen(
+            DiaryScreen(
                 viewModel = diaryViewModel,
                 onTextChange = diaryViewModel::onTextChange,
                 onMoodSelect = diaryViewModel::onMoodSelect,
@@ -136,10 +138,23 @@ fun StartNavigation(
         }
 
         composable("diary_detail_screen/{date}") { backStackEntry ->
-            val date = backStackEntry.arguments?.getString("date")
-            MealDetailScreen(
-                date = date,
-                onBackClick = { navController.popBackStack() }
+            val date = backStackEntry.arguments!!.getString("date")!!
+            val diaryViewModel: DiaryViewModel = hiltViewModel()
+            diaryViewModel.userId = userId ?: ""
+            val entries by diaryViewModel.entries.collectAsStateWithLifecycle(initialValue = emptyList())
+            val diaryEntry = entries.firstOrNull { it.date == date }
+
+            DiaryScreen(
+                diaryEntry = diaryEntry,
+                viewModel = diaryViewModel,
+                onTextChange = diaryViewModel::onTextChange,
+                onMoodSelect = diaryViewModel::onMoodSelect,
+                onAnalyzeClick = { diaryViewModel.onAnalyzeClick() },
+                onSaveClick = { _, _ ->
+                    diaryViewModel.updateDiary(diaryViewModel.uiState, diaryViewModel.userId, date)
+                    navController.popBackStack()
+                },
+                onNavigateToDiaryList = { navController.popBackStack() }
             )
         }
     }
@@ -155,14 +170,10 @@ fun StartNavigation(
                     backPressedTime = currentTime
                 }
             }
+
             else -> {
                 navController.popBackStack()
             }
         }
     }
-}
-
-@Composable
-fun MealDetailScreen(date: String?, onBackClick: () -> Boolean) {
-    TODO("Not yet implemented")
 }

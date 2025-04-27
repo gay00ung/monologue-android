@@ -5,10 +5,15 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
@@ -32,9 +37,12 @@ import net.ifmain.monologue.ui.theme.Cream
 import net.ifmain.monologue.ui.theme.Honey
 import net.ifmain.monologue.ui.theme.Lemon
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,11 +51,13 @@ import androidx.compose.ui.graphics.Color.Companion.LightGray
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import net.ifmain.monologue.data.model.DiaryEntry
 import net.ifmain.monologue.viewmodel.DiaryViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun DiaryWriteScreen(
+fun DiaryScreen(
+    diaryEntry: DiaryEntry? = null,
     viewModel: DiaryViewModel,
     onTextChange: (String) -> Unit,
     onMoodSelect: (String) -> Unit,
@@ -57,8 +67,17 @@ fun DiaryWriteScreen(
 ) {
     val uiState = viewModel.uiState
     val context = LocalContext.current
-    val moods = listOf("😊", "😐", "😢", "😡", "😴", "😍", "❓")
+    val moods =
+        listOf("😊", "😐", "😢", "😡", "😴", "😍", "😩", "🥳", "🫩", "🤢", "😷", "🤩", "😆", "😋", "🤒", "❓")
     var showDialog by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
+
+    LaunchedEffect(diaryEntry) {
+        if (diaryEntry != null) {
+            viewModel.onTextChange(diaryEntry.text)
+            viewModel.onMoodSelect(diaryEntry.mood ?: "❓")
+        }
+    }
 
     Scaffold(
         containerColor = Cream,
@@ -105,11 +124,14 @@ fun DiaryWriteScreen(
             )
 
             Text("감정을 선택해보세요")
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(scrollState),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(items = moods, key = { it }) { mood ->
+                moods.forEach { mood ->
                     val isSelected = uiState.selectedMood == mood
                     Text(
                         text = mood,
@@ -117,17 +139,28 @@ fun DiaryWriteScreen(
                         modifier = Modifier
                             .clip(CircleShape)
                             .background(
-                                if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                if (isSelected)
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                                 else Color.Transparent
                             )
                             .padding(8.dp)
-                            .clickable {
-                                Log.d("DiaryHomeScreen", "Mood clicked: $mood")
-                                onMoodSelect(mood)
-                            }
+                            .clickable { onMoodSelect(mood) }
                     )
                 }
             }
+            LinearProgressIndicator(
+                progress = {
+                    if (scrollState.maxValue > 0)
+                        scrollState.value / scrollState.maxValue.toFloat()
+                    else 0f
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(50)),
+                color = Lemon,
+                trackColor = LightGray,
+            )
 
             // 추후 구현 예정
 //            Button(
@@ -207,7 +240,10 @@ fun DiaryWriteScreen(
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                viewModel.updateDiary(uiState, viewModel.userId)
+                                viewModel.updateDiary(
+                                    uiState, viewModel.userId,
+                                    diaryEntry?.date.toString()
+                                )
                                 Toast.makeText(context, "수정되었습니다!", Toast.LENGTH_SHORT).show()
                                 showDialog = false
                                 onNavigateToDiaryList()

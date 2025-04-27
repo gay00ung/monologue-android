@@ -66,7 +66,10 @@ class DiaryViewModel @Inject constructor(
         println("💾 저장됨: 텍스트=$finalText, 감정=${uiState.selectedMood}")
 
         val currentUserId = userId
-        Log.d("DiaryViewModel", "onSaveClick triggered with mood=${uiState.selectedMood} and text=$finalText")
+        Log.d(
+            "DiaryViewModel",
+            "onSaveClick triggered with mood=${uiState.selectedMood} and text=$finalText"
+        )
 
         if (currentUserId.isBlank()) {
             onError("유저 정보가 없습니다.")
@@ -110,30 +113,28 @@ class DiaryViewModel @Inject constructor(
         }
     }
 
-    fun updateDiary(uiState: DiaryUiState, userId: String) {
-        val today = LocalDate.now().toString()
+    fun updateDiary(uiState: DiaryUiState, userId: String, date: String) {
         val entry = DiaryEntry(
-            date = today,
+            date = date,
             text = if (uiState.text.isBlank()) "기록 없음" else uiState.text,
             mood = uiState.selectedMood,
             isSynced = false
         )
-
         viewModelScope.launch {
             try {
-                val response = repository.api.updateDiary(DiaryEntryDto(
-                    date = entry.date,
+                val dto = DiaryEntryDto(
+                    date = date,
                     text = entry.text,
                     mood = entry.mood,
                     userId = userId
-                ))
-
+                )
+                val response = repository.api.updateDiary(dto)
                 if (response.isSuccessful) {
                     repository.updateEntry(entry, userId)
-                    Log.d("DiaryViewModel", "Diary updated successfully!")
                     loadEntries()
+                    Log.d("DiaryViewModel", "Diary updated for date=$date")
                 } else {
-                    Log.e("DiaryViewModel", "Error updating diary: ${response.message()}")
+                    Log.e("DiaryViewModel", "Update failed: ${response.message()}")
                 }
             } catch (e: Exception) {
                 Log.e("DiaryViewModel", "Error updating diary", e)
