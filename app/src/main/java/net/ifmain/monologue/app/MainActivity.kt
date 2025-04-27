@@ -12,14 +12,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
-import net.ifmain.monologue.data.model.DiaryUiState
-import net.ifmain.monologue.ui.screen.DiaryHomeScreen
+import net.ifmain.monologue.ui.screen.DiaryWriteScreen
 import net.ifmain.monologue.ui.screen.DiaryListScreen
 import net.ifmain.monologue.ui.screen.IntroScreen
 import net.ifmain.monologue.ui.screen.auth.SignInScreen
@@ -60,9 +57,13 @@ fun StartNavigation(
             IntroScreen(
                 onSignInClick = { navController.navigate("sign_in_screen") },
                 onSignUpClick = { navController.navigate("sign_up_screen") },
-                onNavigateToMain = { name, id ->
+                onNavigateToDiaryWrite = { name, id ->
                     userId = id
-                    navController.navigate("diary_home_screen")
+                    navController.navigate("diary_write_screen")
+                },
+                onNavigateToDiaryList = { name, id ->
+                    userId = id
+                    navController.navigate("diary_list_screen")
                 },
                 viewModel = introViewModel
             )
@@ -89,11 +90,11 @@ fun StartNavigation(
                 },
             )
         }
-        composable("diary_home_screen") {
+        composable("diary_write_screen") {
             val diaryViewModel: DiaryViewModel = hiltViewModel()
             diaryViewModel.userId = userId ?: ""
             diaryViewModel.syncOfflineEntries()
-            DiaryHomeScreen(
+            DiaryWriteScreen(
                 viewModel = diaryViewModel,
                 onTextChange = diaryViewModel::onTextChange,
                 onMoodSelect = diaryViewModel::onMoodSelect,

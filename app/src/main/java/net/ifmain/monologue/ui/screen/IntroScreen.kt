@@ -1,7 +1,6 @@
 package net.ifmain.monologue.ui.screen
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
@@ -38,7 +37,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import net.ifmain.monologue.R
 import net.ifmain.monologue.ui.theme.Cream
 import net.ifmain.monologue.ui.theme.Honey
@@ -50,7 +51,8 @@ import net.ifmain.monologue.viewmodel.IntroViewModel
 fun IntroScreen(
     onSignInClick: () -> Unit,
     onSignUpClick: () -> Unit,
-    onNavigateToMain: (name: String, userId: String) -> Unit,
+    onNavigateToDiaryWrite: (name: String, userId: String) -> Unit,
+    onNavigateToDiaryList: (name: String, userId: String) -> Unit,
     viewModel: IntroViewModel = hiltViewModel()
 ) {
     var isLogoCentered by remember { mutableStateOf(true) }
@@ -68,7 +70,14 @@ fun IntroScreen(
                     "${name}님 환영합니다!",
                     Toast.LENGTH_SHORT
                 ).show()
-                onNavigateToMain(name, userId)
+                viewModel.viewModelScope.launch {
+                    val diaryExists = viewModel.checkDiaryExists(userId)
+                    if (diaryExists) {
+                        onNavigateToDiaryList(name, userId)
+                    } else {
+                        onNavigateToDiaryWrite(name, userId)
+                    }
+                }
             },
             onLoginFail = { isLogoCentered = false }
         )

@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import net.ifmain.monologue.data.model.DiaryUiState
 import net.ifmain.monologue.ui.component.TitleBar
 import net.ifmain.monologue.ui.theme.Cream
 import net.ifmain.monologue.ui.theme.Honey
@@ -40,18 +39,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.Color.Companion.LightGray
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
 import net.ifmain.monologue.viewmodel.DiaryViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun DiaryHomeScreen(
+fun DiaryWriteScreen(
     viewModel: DiaryViewModel,
     onTextChange: (String) -> Unit,
     onMoodSelect: (String) -> Unit,
