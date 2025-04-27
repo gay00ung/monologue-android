@@ -50,7 +50,7 @@ import net.ifmain.monologue.viewmodel.IntroViewModel
 fun IntroScreen(
     onSignInClick: () -> Unit,
     onSignUpClick: () -> Unit,
-    onNavigateToMain: () -> Unit,
+    onNavigateToMain: (name: String, userId: String) -> Unit,
     viewModel: IntroViewModel = hiltViewModel()
 ) {
     var isLogoCentered by remember { mutableStateOf(true) }
@@ -62,13 +62,13 @@ fun IntroScreen(
     LaunchedEffect(Unit) {
         delay(2000)
         viewModel.checkAutoLogin(
-            onAutoLoginSuccess = { name ->
+            onAutoLoginSuccess = { name, userId ->
                 Toast.makeText(
                     context,
                     "${name}님 환영합니다!",
                     Toast.LENGTH_SHORT
                 ).show()
-                onNavigateToMain()
+                onNavigateToMain(name, userId)
             },
             onLoginFail = { isLogoCentered = false }
         )

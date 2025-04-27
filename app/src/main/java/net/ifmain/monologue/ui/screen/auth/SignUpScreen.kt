@@ -1,5 +1,6 @@
 package net.ifmain.monologue.ui.screen.auth
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -36,7 +37,7 @@ import net.ifmain.monologue.viewmodel.SignUpViewModel
 @Composable
 fun SignUpScreen(
     viewModel: SignUpViewModel = hiltViewModel(),
-    onNavigateToMain: () -> Unit
+    onNavigateToMain: (name: String, userId: String) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
@@ -93,7 +94,13 @@ fun SignUpScreen(
                                 else -> {
                                     viewModel.signUp(
                                         onSuccess = {
-                                            onNavigateToMain()
+                                            onNavigateToMain(
+                                                viewModel.username,
+                                                viewModel.userId
+                                            )
+
+                                            Log.d("SignUpViewModel", "Sending signup with: userId=${viewModel.userId}, username=${viewModel.username}, email=${viewModel.email}, password=${viewModel.password}")
+
                                             Toast.makeText(context, "회원가입 성공!", Toast.LENGTH_SHORT)
                                                 .show()
                                         },

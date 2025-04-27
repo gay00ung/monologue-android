@@ -18,15 +18,18 @@ class SignInViewModel @Inject constructor(
     private val userPrefs: UserPreferenceManager,
     private val api: DiaryApi,
 ) : ViewModel() {
+    var userId by mutableStateOf("")
+    var userName by mutableStateOf("")
     var email by mutableStateOf("")
     var password by mutableStateOf("")
-    var userName by mutableStateOf("")
 
     fun signIn(onSuccess: (String) -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
                 val response = api.postSignIn(
                     UserDto(
+                        id = userId,
+                        name = userName,
                         email = email,
                         password = password
                     )
@@ -36,7 +39,7 @@ class SignInViewModel @Inject constructor(
                     val body = response.body()
                     if (body != null) {
                         userName = body.name.toString()
-                        userPrefs.saveUserInfo(email, password)
+                        userPrefs.saveUserInfo(userId, userName, email, password)
                         onSuccess(userName)
                     } else {
                         onError("응답이 비어있습니다.")

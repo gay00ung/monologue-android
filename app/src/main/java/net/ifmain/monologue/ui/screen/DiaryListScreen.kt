@@ -1,54 +1,109 @@
 package net.ifmain.monologue.ui.screen
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.ifmain.monologue.data.model.DiaryEntry
+import net.ifmain.monologue.ui.component.TitleBar
+import net.ifmain.monologue.ui.theme.Cream
+import net.ifmain.monologue.ui.theme.Lemon
+import net.ifmain.monologue.viewmodel.DiaryViewModel
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun DiaryListScreen(
-    entries: List<DiaryEntry>,
+    viewModel: DiaryViewModel,
     onEntryClick: (DiaryEntry) -> Unit
 ) {
-    LazyColumn(
+    val entries by viewModel.entries.collectAsStateWithLifecycle()
+
+    Scaffold(
+        containerColor = Cream,
+        topBar = {
+            TitleBar()
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(entries) { entry ->
+                DiaryCard(entry = entry, onEntryClick = onEntryClick)
+            }
+        }
+    }
+}
+
+@Composable
+fun DiaryCard(
+    entry: DiaryEntry,
+    onEntryClick: (DiaryEntry) -> Unit
+) {
+    Card(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+            .fillMaxWidth()
+            .clickable { onEntryClick(entry) },
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 6.dp
+        )
     ) {
-//        items(entries) { entry ->
-//            Card(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(vertical = 6.dp)
-//                    .clickable { onEntryClick(entry) },
-//                elevation = CardDefaults.cardElevation(4.dp)
-//            ) {
-//                Column(modifier = Modifier.padding(16.dp)) {
-//                    Row(
-//                        horizontalArrangement = Arrangement.SpaceBetween,
-//                        modifier = Modifier.fillMaxWidth()
-//                    ) {
-//                        Text(
-//                            text = entry.date,
-//                            style = MaterialTheme.typography.labelLarge
-//                        )
-//                        Text(
-//                            text = entry.mood ?: "❓",
-//                            fontSize = 20.sp
-//                        )
-//                    }
-//                    Spacer(Modifier.height(4.dp))
-//                    Text(
-//                        text = entry.text,
-//                        style = MaterialTheme.typography.bodyLarge,
-//                        maxLines = 2,
-//                        overflow = TextOverflow.Ellipsis
-//                    )
-//                }
-//            }
-//        }
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = formatDate(entry.date),
+                fontSize = 14.sp,
+                color = Lemon,
+                fontWeight = FontWeight.Bold
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = entry.text,
+                    fontSize = 16.sp,
+                    color = Color.DarkGray,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = entry.mood ?: "❓",
+                    fontSize = 24.sp,
+                    modifier = Modifier.padding(start = 8.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+private fun formatDate(date: String): String {
+    return try {
+        val parsedDate = LocalDate.parse(date)
+        parsedDate.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+    } catch (e: Exception) {
+        date
     }
 }

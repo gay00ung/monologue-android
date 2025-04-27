@@ -1,30 +1,97 @@
 package net.ifmain.monologue.data.repository
 
+import android.util.Log
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import net.ifmain.monologue.data.api.DiaryApi
 import net.ifmain.monologue.data.dao.DiaryDao
 import net.ifmain.monologue.data.model.DiaryEntry
 import net.ifmain.monologue.data.model.DiaryEntryDto
+import java.time.LocalDate
+import javax.inject.Inject
 
-class DiaryRepository(
+class DiaryRepository @Inject constructor(
     private val dao: DiaryDao,
-    private val api: DiaryApi
+    internal val api: DiaryApi
 ) {
     fun getEntries(): Flow<List<DiaryEntry>> = dao.getAll()
 
-    suspend fun saveEntry(entry: DiaryEntry) {
+    suspend fun saveEntry(entry: DiaryEntry, userId: String) {
         dao.insert(entry)
         try {
             val dto = DiaryEntryDto(
                 date = entry.date,
                 text = entry.text,
                 mood = entry.mood,
-                userId = "test-user"
+                userId = userId
             )
-            api.postDiary(dto)
+            val response = api.postDiary(dto)
+            if (response.isSuccessful) {
+                dao.markAsSynced(entry.date)
+                Log.d("DiaryRepository", "Diary saved and marked as synced.")
+            } else {
+                Log.e("DiaryRepository", "Failed to save diary: ${response.message()}")
+            }
         } catch (e: Exception) {
-            // 실패시 isSynced = false 로 저장
+            Log.e("DiaryRepository", "Error saving diary", e)
         }
     }
 
+    suspend fun updateEntry(entry: DiaryEntry, userId: String) {
+        dao.insert(entry)
+        try {
+            val dto = DiaryEntryDto(
+                date = entry.date,
+                text = entry.text,
+                mood = entry.mood,
+                userId = userId
+            )
+            val response = api.updateDiary(dto)
+            if (response.isSuccessful) {
+                dao.markAsSynced(entry.date)
+                Log.d("DiaryRepository", "Diary updated and marked as synced.")
+            } else {
+                Log.e("DiaryRepository", "Failed to update diary: ${response.message()}")
+            }
+        } catch (e: Exception) {
+            Log.e("DiaryRepository", "Error updating diary", e)
+        }
+    }
+
+    suspend fun checkDiaryExists(userId: String): Boolean {
+        val todayDate = LocalDate.now().toString()
+        return try {
+            val diaries = api.getDiaries(userId)
+            diaries.any { it.date == todayDate }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    suspend fun syncUnsyncedEntries(userId: String) {
+        val unsyncedEntries = withContext(Dispatchers.IO) {
+            dao.getUnsynced()
+        }
+        for (entry in unsyncedEntries) {
+            try {
+                val dto = DiaryEntryDto(
+                    date = entry.date,
+                    text = entry.text,
+                    mood = entry.mood,
+                    userId = userId
+                )
+                val response = api.postDiary(dto)
+                if (response.isSuccessful) {
+                    dao.markAsSynced(entry.date)
+                    Log.d("DiaryRepository", "Synced diary for date=${entry.date}")
+                } else {
+                    Log.e("DiaryRepository", "Failed to sync diary: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                Log.e("DiaryRepository", "Error syncing diary for date=${entry.date}", e)
+            }
+        }
+    }
 }

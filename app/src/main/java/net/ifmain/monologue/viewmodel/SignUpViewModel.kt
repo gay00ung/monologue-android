@@ -18,6 +18,7 @@ class SignUpViewModel @Inject constructor(
     private val userPrefs: UserPreferenceManager,
     private val api: DiaryApi,
 ) : ViewModel() {
+    var userId by mutableStateOf("")
     var email by mutableStateOf("")
     var username by mutableStateOf("")
     var password by mutableStateOf("")
@@ -50,7 +51,7 @@ class SignUpViewModel @Inject constructor(
                 )
 
                 if (response.isSuccessful) {
-                    userPrefs.saveUserInfo(email, password)
+                    userPrefs.saveUserInfo(userId, username, email, password)
                     onSuccess()
                 } else {
                     onError("회원가입에 실패했습니다. (${response.code()})")
