@@ -160,6 +160,7 @@ fun DiaryHomeScreen(
                             },
                             onSuccess = {
                                 Toast.makeText(context, "저장되었습니다!", Toast.LENGTH_SHORT).show()
+                                onNavigateToDiaryList()
                             }
                         )
                     }
@@ -213,6 +214,7 @@ fun DiaryHomeScreen(
                                 viewModel.updateDiary(uiState, viewModel.userId)
                                 Toast.makeText(context, "수정되었습니다!", Toast.LENGTH_SHORT).show()
                                 showDialog = false
+                                onNavigateToDiaryList()
                             },
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.padding(8.dp),
@@ -235,7 +237,7 @@ fun DiaryHomeScreen(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.padding(8.dp),
                             colors = ButtonDefaults.textButtonColors(
-                                contentColor = Color(0xFF9E9E9E), // 회색 버튼 색상
+                                contentColor = Color(0xFF9E9E9E),
                                 containerColor = Color.Transparent
                             )
                         ) {

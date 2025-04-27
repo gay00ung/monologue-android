@@ -20,6 +20,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import net.ifmain.monologue.data.model.DiaryUiState
 import net.ifmain.monologue.ui.screen.DiaryHomeScreen
+import net.ifmain.monologue.ui.screen.DiaryListScreen
 import net.ifmain.monologue.ui.screen.IntroScreen
 import net.ifmain.monologue.ui.screen.auth.SignInScreen
 import net.ifmain.monologue.ui.screen.auth.SignUpScreen
@@ -91,6 +92,7 @@ fun StartNavigation(
         composable("diary_home_screen") {
             val diaryViewModel: DiaryViewModel = hiltViewModel()
             diaryViewModel.userId = userId ?: ""
+            diaryViewModel.syncOfflineEntries()
             DiaryHomeScreen(
                 viewModel = diaryViewModel,
                 onTextChange = diaryViewModel::onTextChange,
@@ -109,5 +111,18 @@ fun StartNavigation(
                 onNavigateToDiaryList = { navController.navigate("diary_list_screen") }
             )
         }
+
+        composable("diary_list_screen") {
+            val diaryViewModel: DiaryViewModel = hiltViewModel()
+            diaryViewModel.userId = userId ?: ""
+
+            DiaryListScreen(
+                viewModel = diaryViewModel,
+                onEntryClick = { entry ->
+//                    navController.navigate("diary_detail_screen/${entry.date}")
+                }
+            )
+        }
+
     }
 }

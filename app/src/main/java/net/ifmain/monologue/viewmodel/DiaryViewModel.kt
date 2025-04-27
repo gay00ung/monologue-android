@@ -7,8 +7,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import net.ifmain.monologue.data.api.DiaryApi
 import net.ifmain.monologue.data.model.DiaryEntry
 import net.ifmain.monologue.data.model.DiaryEntryDto
 import net.ifmain.monologue.data.model.DiaryUiState
@@ -24,6 +25,22 @@ class DiaryViewModel @Inject constructor(
         private set
     var userId by mutableStateOf<String>("")
     var isSaving by mutableStateOf(false)
+
+    private val _entries = MutableStateFlow<List<DiaryEntry>>(emptyList())
+    val entries: StateFlow<List<DiaryEntry>> = _entries
+
+    init {
+        loadEntries()
+    }
+
+    private fun loadEntries() {
+        viewModelScope.launch {
+            repository.getEntries()
+                .collect { fetchedEntries ->
+                    _entries.value = fetchedEntries
+                }
+        }
+    }
 
     fun onTextChange(newText: String) {
         uiState = uiState.copy(text = newText)
@@ -87,7 +104,7 @@ class DiaryViewModel @Inject constructor(
         try {
             repository.saveEntry(entry, userId)
             Log.d("DiaryViewModel", "Diary saved successfully!")
-            // TODO: 저장 후 UI 업데이트 및 새로운 화면으로 이동
+            loadEntries()
         } catch (e: Exception) {
             Log.e("DiaryViewModel", "Error saving diary", e)
         }
@@ -112,8 +129,9 @@ class DiaryViewModel @Inject constructor(
                 ))
 
                 if (response.isSuccessful) {
+                    repository.updateEntry(entry, userId)
                     Log.d("DiaryViewModel", "Diary updated successfully!")
-                    // TODO: 저장 후 UI 업데이트 및 새로운 화면으로 이동
+                    loadEntries()
                 } else {
                     Log.e("DiaryViewModel", "Error updating diary: ${response.message()}")
                 }
@@ -127,5 +145,14 @@ class DiaryViewModel @Inject constructor(
         // TODO: 감정 분석 API 호출 후 상태 업데이트
     }
 
+    fun syncOfflineEntries() {
+        viewModelScope.launch {
+            try {
+                repository.syncUnsyncedEntries(userId)
+            } catch (e: Exception) {
+                Log.e("DiaryViewModel", "Error syncing offline entries", e)
+            }
+        }
+    }
 }
 
