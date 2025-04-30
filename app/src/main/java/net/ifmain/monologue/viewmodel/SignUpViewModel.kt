@@ -7,12 +7,15 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.*
 import net.ifmain.monologue.data.api.DiaryApi
 import net.ifmain.monologue.data.model.UserEntryDto
 import net.ifmain.monologue.data.preference.UserPreferenceManager
 import javax.inject.Inject
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val userPrefs: UserPreferenceManager,
@@ -23,6 +26,30 @@ class SignUpViewModel @Inject constructor(
     var username by mutableStateOf("")
     var password by mutableStateOf("")
     var confirmPassword by mutableStateOf("")
+    private val _emailFlow = MutableStateFlow("")
+    var emailCheckMessage by mutableStateOf<String?>(null)
+    var isCheckingEmail by mutableStateOf(false)
+
+    init {
+        viewModelScope.launch {
+            _emailFlow
+                .debounce(500)
+                .distinctUntilChanged()
+                .collect { emailInput ->
+                    isCheckingEmail = true
+                    emailCheckMessage = null
+                    if (isValidEmail(emailInput)) {
+                        val available = isEmailAvailable(emailInput)
+                        emailCheckMessage = if (available) {
+                            "✅ 사용 가능한 이메일입니다."
+                        } else {
+                            "❌ 이미 사용 중인 이메일입니다."
+                        }
+                    }
+                    isCheckingEmail = false
+                }
+        }
+    }
 
     fun signUp(onSuccess: () -> Unit, onError: (String) -> Unit) {
         if (!isValidEmail(email)) {
@@ -69,6 +96,24 @@ class SignUpViewModel @Inject constructor(
     fun isValidPassword(password: String): Boolean {
         val passwordRegex = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$")
         return passwordRegex.matches(password)
+    }
+
+    suspend fun isEmailAvailable(email: String): Boolean {
+        val response = api.checkEmailAvailability(email)
+        val body = response.body()
+        Log.d("EmailCheck", "Response: ${response.raw()}")
+        Log.d("EmailCheck", "Body: $body")
+        return try {
+            val response = api.checkEmailAvailability(email)
+            response.isSuccessful && response.body()?.available == true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    fun onEmailChanged(newEmail: String) {
+        email = newEmail
+        _emailFlow.value = newEmail
     }
 
     fun hasEmptyFields(): Boolean {

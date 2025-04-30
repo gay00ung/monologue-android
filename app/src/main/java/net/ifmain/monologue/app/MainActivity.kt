@@ -87,7 +87,9 @@ fun StartNavigation(
                 viewModel = signInViewModel,
                 onSignInClick = { name, id ->
                     userId = id
-                    navController.navigate("diary_home_screen")
+                    navController.navigate("diary_write_screen") {
+                        popUpTo("diary_write_screen") { inclusive = true }
+                    }
                 }
             )
         }
@@ -98,7 +100,9 @@ fun StartNavigation(
                 viewModel = signUpViewModel,
                 onNavigateToMain = { name, id ->
                     userId = id
-                    navController.navigate("diary_home_screen")
+                    navController.navigate("diary_write_screen") {
+                        popUpTo("diary_write_screen") { inclusive = true }
+                    }
                 },
             )
         }
