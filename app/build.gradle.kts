@@ -62,7 +62,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -112,6 +111,10 @@ dependencies {
     annotationProcessor(libs.androidx.hilt.compiler.v120)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation (libs.androidx.hilt.navigation.compose)
+
+    implementation (libs.okhttp)
+    implementation (libs.persistentcookiejar)
+    implementation (libs.converter.moshi)
 }
 
 kapt {

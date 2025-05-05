@@ -23,38 +23,26 @@ class SignInViewModel @Inject constructor(
     var email by mutableStateOf("")
     var password by mutableStateOf("")
 
-    fun signIn(onSuccess: (String) -> Unit, onError: (String) -> Unit) {
+    fun signIn(
+        onSuccess: (userId: String, userName: String) -> Unit,
+        onError: (String) -> Unit
+    ) {
         viewModelScope.launch {
             try {
-                val response = api.postSignIn(
-                    UserDto(
-                        id = userId,
-                        name = userName,
-                        email = email,
-                        password = password
-                    )
-                )
-
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body != null) {
-                        userName = body.name.toString()
-                        userPrefs.saveUserInfo(userId, userName, email, password)
-                        onSuccess(userName)
-                    } else {
-                        onError("응답이 비어있습니다.")
-                    }
+                val resp = api.postSignIn(UserDto(email = email, password = password))
+                if (resp.isSuccessful && resp.body() != null) {
+                    val u = resp.body()!!
+                    userPrefs.saveSession(u.id, u.name ?: "")
+                    userId   = u.id
+                    userName = u.name ?: ""
+                    onSuccess(u.id, u.name ?: "")
                 } else {
-                    val errorMsg = response.errorBody()?.string()
-                    if (!errorMsg.isNullOrBlank()) {
-                        onError(parseErrorMessage(errorMsg))
-                    } else {
-                        onError("로그인에 실패했습니다. (${response.code()})")
-                    }
+                    val err = resp.errorBody()?.string()
+                    if (!err.isNullOrBlank()) onError(parseErrorMessage(err))
+                    else onError("로그인에 실패했습니다. (${resp.code()})")
                 }
             } catch (e: Exception) {
-                Log.d("SignInViewModel", "Error: ${e.localizedMessage}")
-                onError("네트워크 오류가 발생했습니다.")
+                onError("네트워크 오류: ${e.localizedMessage}")
             }
         }
     }

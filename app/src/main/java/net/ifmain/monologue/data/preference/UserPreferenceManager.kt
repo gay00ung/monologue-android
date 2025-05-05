@@ -10,33 +10,21 @@ import javax.inject.Inject
 val Context.dataStore by preferencesDataStore(name = "user_prefs")
 
 class UserPreferenceManager @Inject constructor(private val context: Context) {
-    private val dataStore = context.dataStore
+    private val ds = context.dataStore
 
-    val userInfoFlow: Flow<Pair<String?, String?>> = dataStore.data
+    val sessionFlow: Flow<Pair<String?, String?>> = ds.data
         .map { prefs ->
-            val userId = prefs[UserPreferenceKeys.USER_ID]
-            val name = prefs[UserPreferenceKeys.USER_NAME]
-            val email = prefs[UserPreferenceKeys.USER_EMAIL]
-            val password = prefs[UserPreferenceKeys.USER_PASSWORD]
-            Pair(email, password)
+            prefs[UserPreferenceKeys.USER_ID] to prefs[UserPreferenceKeys.USER_NAME]
         }
 
-    suspend fun saveUserInfo(
-        userId: String,
-        name: String,
-        email: String,
-        password: String
-    ) {
-        dataStore.edit { prefs ->
+    suspend fun saveSession(userId: String, userName: String) {
+        ds.edit { prefs ->
             prefs[UserPreferenceKeys.USER_ID] = userId
-            prefs[UserPreferenceKeys.USER_NAME] = name
-            prefs[UserPreferenceKeys.USER_EMAIL] = email
-            prefs[UserPreferenceKeys.USER_PASSWORD] = password
+            prefs[UserPreferenceKeys.USER_NAME] = userName
         }
     }
 
-    suspend fun clearUserInfo() {
-        dataStore.edit { it.clear() }
+    suspend fun clearSession() {
+        ds.edit { it.clear() }
     }
 }
-

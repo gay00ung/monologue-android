@@ -22,35 +22,21 @@ class IntroViewModel @Inject constructor(
     var isButtonVisible = mutableStateOf(false)
         private set
     var userId by mutableStateOf("")
-    var userName by mutableStateOf("")
+
 
     fun checkAutoLogin(onAutoLoginSuccess: (String, String) -> Unit, onLoginFail: () -> Unit) {
         viewModelScope.launch {
-            userPrefs.userInfoFlow.collect { (email, password) ->
-                if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
-                    try {
-                        val response = api.postSignIn(UserDto(userId, userName, email, password))
-                        if (response.isSuccessful && response.body() != null) {
-                            val body = response.body()
-                            userId = body?.id.toString()
-                            userName = body?.name.toString()
-                            val diaryExists = checkDiaryExists(userId)
-                            if (diaryExists) {
-                                onAutoLoginSuccess(userName, userId)
-                            } else {
-                                onAutoLoginSuccess(userName, userId)
-                            }
-                        } else {
-                            isButtonVisible.value = true
-                            onLoginFail()
-                        }
-                    } catch (e: Exception) {
-                        isButtonVisible.value = true
-                        onLoginFail()
-                    }
+            try {
+                val resp = api.getCurrentUser()
+                if (resp.isSuccessful && resp.body() != null) {
+                    val u = resp.body()!!
+                    userPrefs.saveSession(u.id, u.name.toString())
+                    onAutoLoginSuccess(u.id, u.name.toString())
                 } else {
-                    isButtonVisible.value = true
+                    isButtonVisible.value = true; onLoginFail()
                 }
+            } catch (e: Exception) {
+                isButtonVisible.value = true; onLoginFail()
             }
         }
     }

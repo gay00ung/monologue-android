@@ -52,39 +52,27 @@ class SignUpViewModel @Inject constructor(
     }
 
     fun signUp(onSuccess: () -> Unit, onError: (String) -> Unit) {
-        if (!isValidEmail(email)) {
-            onError("올바른 이메일 형식이 아닙니다.")
-            return
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            onError("올바른 이메일 형식이 아닙니다."); return
         }
-
         if (!isValidPassword(password)) {
-            onError("비밀번호는 대소문자와 숫자를 포함해야 하며, 8자 이상이어야 합니다.")
-            return
+            onError("비밀번호는 대소문자와 숫자를 포함해야 하며, 8자 이상이어야 합니다."); return
         }
-
         if (password != confirmPassword) {
-            onError("비밀번호가 일치하지 않습니다.")
-            return
+            onError("비밀번호가 일치하지 않습니다."); return
         }
-
         viewModelScope.launch {
             try {
-                val response = api.postSignUp(
-                    UserEntryDto(
-                        name = username,
-                        email = email,
-                        password = password
-                    )
-                )
-
-                if (response.isSuccessful) {
-                    userPrefs.saveUserInfo(userId, username, email, password)
+                val resp = api.postSignUp(UserEntryDto(name = username, email = email, password = password))
+                if (resp.isSuccessful && resp.body() != null) {
+                    val u = resp.body()!!
+                    userPrefs.saveSession(u.id, u.name.toString())
                     onSuccess()
                 } else {
-                    onError("회원가입에 실패했습니다. (${response.code()})")
+                    onError("회원가입 실패 (${resp.code()})")
                 }
             } catch (e: Exception) {
-                Log.d("SignUpViewModel", "Error: ${e.localizedMessage}")
+                onError("네트워크 오류: ${e.localizedMessage}")
             }
         }
     }

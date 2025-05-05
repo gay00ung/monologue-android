@@ -31,7 +31,8 @@ import net.ifmain.monologue.viewmodel.IntroViewModel
 import net.ifmain.monologue.viewmodel.SignInViewModel
 import net.ifmain.monologue.viewmodel.SignUpViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.getValue
+import net.ifmain.monologue.ui.screen.LicenseScreen
+import net.ifmain.monologue.ui.screen.SettingsScreen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -84,13 +85,20 @@ fun StartNavigation(
             val signInViewModel: SignInViewModel = hiltViewModel()
 
             SignInScreen(
-                viewModel = signInViewModel,
-                onSignInClick = { name, id ->
+                signInViewModel = signInViewModel,
+                introViewModel = hiltViewModel(),
+                onNavigateToDiaryScreen = { name, id ->
                     userId = id
                     navController.navigate("diary_write_screen") {
                         popUpTo("diary_write_screen") { inclusive = true }
                     }
-                }
+                },
+                onNavigateToDiaryList = { name, id ->
+                    userId = id
+                    navController.navigate("diary_list_screen") {
+                        popUpTo("diary_list_screen") { inclusive = true }
+                    }
+                },
             )
         }
         composable("sign_up_screen") {
@@ -139,6 +147,9 @@ fun StartNavigation(
                 userId = diaryViewModel.userId,
                 onNavigateToDiaryDetail = { entry ->
                     navController.navigate("diary_detail_screen/${entry.date}")
+                },
+                onNavigateToSettings = {
+                    navController.navigate("settings_screen")
                 }
             )
         }
@@ -163,6 +174,17 @@ fun StartNavigation(
                 },
                 onNavigateToDiaryList = { navController.popBackStack() }
             )
+        }
+
+        composable ("settings_screen") {
+            SettingsScreen(
+                onNavigateToIntro = { navController.navigate("intro_screen") },
+                onNavigateToLicense = { navController.navigate("license_screen") }
+            )
+        }
+
+        composable("license_screen") {
+            LicenseScreen()
         }
     }
 
