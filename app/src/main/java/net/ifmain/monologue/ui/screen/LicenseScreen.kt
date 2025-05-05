@@ -17,42 +17,51 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import net.ifmain.monologue.ui.theme.Cream
+import net.ifmain.monologue.ui.theme.Honey
 
 @Composable
 fun LicenseScreen() {
     val licenses = listOf(
-        LicenseItem("AndroidX Core", "Apache 2.0"),
-        LicenseItem("AndroidX Lifecycle", "Apache 2.0"),
+        LicenseItem("AndroidX Core KTX", "Apache 2.0"),
+        LicenseItem("AndroidX Lifecycle Runtime KTX", "Apache 2.0"),
         LicenseItem("AndroidX Activity Compose", "Apache 2.0"),
-        LicenseItem("AndroidX Compose BOM", "Apache 2.0"),
-        LicenseItem("AndroidX UI", "Apache 2.0"),
-        LicenseItem("AndroidX Material3", "Apache 2.0"),
-        LicenseItem("JUnit", "Eclipse Public License 1.0"),
+        LicenseItem("Jetpack Compose BOM", "Apache 2.0"),
+        LicenseItem("Jetpack Compose UI", "Apache 2.0"),
+        LicenseItem("Jetpack Compose UI Graphics", "Apache 2.0"),
+        LicenseItem("Jetpack Compose UI Tooling Preview", "Apache 2.0"),
+        LicenseItem("Material3 (Compose)", "Apache 2.0"),
         LicenseItem("AndroidX Navigation Compose", "Apache 2.0"),
-        LicenseItem("Room", "Apache 2.0"),
+        LicenseItem("Room (Jetpack)", "Apache 2.0"),
         LicenseItem("Retrofit", "Apache 2.0"),
         LicenseItem("Gson Converter", "Apache 2.0"),
-        LicenseItem("Firebase SDK", "Apache 2.0"),
-        LicenseItem("DataStore", "Apache 2.0"),
+        LicenseItem("Firebase Analytics", "Apache 2.0"),
+        LicenseItem("Jetpack DataStore Preferences", "Apache 2.0"),
         LicenseItem("Hilt (Dagger)", "Apache 2.0"),
-        LicenseItem("Kotlin Coroutines", "Apache 2.0"),
-        LicenseItem("Accompanist", "Apache 2.0"),
-        LicenseItem("Coil (Image Loading)", "Apache 2.0"),
-        LicenseItem("MSZ Progress Indicator", "MIT"),
-        LicenseItem("WorkManager", "Apache 2.0")
+        LicenseItem("AndroidX Lifecycle ViewModel Compose", "Apache 2.0"),
+        LicenseItem("AndroidX Hilt Navigation Compose", "Apache 2.0"),
+        LicenseItem("OkHttp", "Apache 2.0"),
+        LicenseItem("PersistentCookieJar", "Apache 2.0"),
+        LicenseItem("Moshi Converter", "Apache 2.0"),
+        LicenseItem("JUnit", "Eclipse Public License 1.0"),
+        LicenseItem("Espresso Core", "Apache 2.0"),
+        LicenseItem("AndroidX UI Test JUnit4", "Apache 2.0"),
+        LicenseItem("AndroidX UI Tooling", "Apache 2.0"),
+        LicenseItem("AndroidX UI Test Manifest", "Apache 2.0")
     )
     Scaffold(
+        containerColor = Cream,
         topBar = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "License",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.headlineLarge,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
+                    color = Honey,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.fillMaxWidth().padding(top = 32.dp),
                 )
             }
         },
