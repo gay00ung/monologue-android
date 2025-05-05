@@ -15,7 +15,7 @@ class DiaryRepository @Inject constructor(
     private val dao: DiaryDao,
     internal val api: DiaryApi
 ) {
-    fun getEntries(): Flow<List<DiaryEntry>> = dao.getAll()
+    fun getEntries(userId: String): Flow<List<DiaryEntry>> = dao.getByUser(userId)
 
     suspend fun saveEntry(entry: DiaryEntry, userId: String) {
         dao.insert(entry)
@@ -72,7 +72,7 @@ class DiaryRepository @Inject constructor(
 
     suspend fun syncUnsyncedEntries(userId: String) {
         val unsyncedEntries = withContext(Dispatchers.IO) {
-            dao.getUnsynced()
+            dao.getUnsynced(userId)
         }
         for (entry in unsyncedEntries) {
             try {

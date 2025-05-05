@@ -26,19 +26,19 @@ class DiaryViewModel @Inject constructor(
     var userId by mutableStateOf<String>("")
     var isSaving by mutableStateOf(false)
 
-    private val _entries = MutableStateFlow<List<DiaryEntry>>(emptyList())
-    val entries: StateFlow<List<DiaryEntry>> = _entries
+    val diaryEntries = MutableStateFlow<List<DiaryEntry>>(emptyList())
 
-    init {
-        loadEntries()
+    fun initialize(userId: String) {
+        this.userId = userId
+        loadUserEntries(userId)
+        syncOfflineEntries()
     }
 
-    private fun loadEntries() {
+    fun loadUserEntries(userId: String) {
         viewModelScope.launch {
-            repository.getEntries()
-                .collect { fetchedEntries ->
-                    _entries.value = fetchedEntries
-                }
+            repository.getEntries(userId).collect { fetchedEntries ->
+                diaryEntries.value = fetchedEntries
+            }
         }
     }
 
@@ -99,6 +99,7 @@ class DiaryViewModel @Inject constructor(
         val today = LocalDate.now().toString()
         val entry = DiaryEntry(
             date = today,
+            userId = userId,
             text = if (uiState.text.isBlank()) "기록 없음" else uiState.text,
             mood = uiState.selectedMood,
             isSynced = false
@@ -107,7 +108,7 @@ class DiaryViewModel @Inject constructor(
         try {
             repository.saveEntry(entry, userId)
             Log.d("DiaryViewModel", "Diary saved successfully!")
-            loadEntries()
+            loadUserEntries(userId)
         } catch (e: Exception) {
             Log.e("DiaryViewModel", "Error saving diary", e)
         }
@@ -116,6 +117,7 @@ class DiaryViewModel @Inject constructor(
     fun updateDiary(uiState: DiaryUiState, userId: String, date: String) {
         val entry = DiaryEntry(
             date = date,
+            userId = userId,
             text = if (uiState.text.isBlank()) "기록 없음" else uiState.text,
             mood = uiState.selectedMood,
             isSynced = false
@@ -131,7 +133,7 @@ class DiaryViewModel @Inject constructor(
                 val response = repository.api.updateDiary(dto)
                 if (response.isSuccessful) {
                     repository.updateEntry(entry, userId)
-                    loadEntries()
+                    loadUserEntries(userId)
                     Log.d("DiaryViewModel", "Diary updated for date=$date")
                 } else {
                     Log.e("DiaryViewModel", "Update failed: ${response.message()}")
