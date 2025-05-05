@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import net.ifmain.monologue.data.model.DiaryEntry
 import net.ifmain.monologue.data.model.DiaryEntryDto
@@ -40,18 +39,15 @@ class DiaryViewModel @Inject constructor(
             repository.getEntries(userId).collect { fetchedEntries ->
                 diaryEntries.value = fetchedEntries
             }
-            Log.d("DiaryViewModel", "Entries loaded: ${diaryEntries.value.size}")
         }
     }
 
     fun onTextChange(newText: String) {
         uiState = uiState.copy(text = newText)
-        Log.d("DiaryViewModel", "Text changed: $newText")
     }
 
     fun onMoodSelect(mood: String) {
         uiState = uiState.copy(selectedMood = mood)
-        Log.d("DiaryViewModel", "Mood selected: $mood")
     }
 
     fun onSaveClick(onError: (String) -> Unit, onSuccess: () -> Unit) {
