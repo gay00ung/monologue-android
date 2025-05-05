@@ -94,14 +94,12 @@ fun StartNavigation(
                     userId = id
                     navController.navigate("diary_write_screen/$userId") {
                         popUpTo("sign_in_screen") { inclusive = true }
-                        popUpTo("intro_screen") { inclusive = true }
                     }
                 },
                 onNavigateToDiaryList = { name, id ->
                     userId = id
                     navController.navigate("diary_list_screen/$userId") {
                         popUpTo("sign_in_screen") { inclusive = true }
-                        popUpTo("intro_screen") { inclusive = true }
                     }
                 },
             )
@@ -115,7 +113,6 @@ fun StartNavigation(
                     userId = id
                     navController.navigate("diary_write_screen/$userId") {
                         popUpTo("sign_up_screen") { inclusive = true }
-                        popUpTo("intro_screen") { inclusive = true }
                     }
                 },
             )
@@ -166,9 +163,7 @@ fun StartNavigation(
                 viewModel = diaryViewModel,
                 userId = userId,
                 onNavigateToDiaryDetail = { entry ->
-                    navController.navigate("diary_detail_screen/${entry.date}") {
-                        popUpTo("diary_write_screen/${userId}") { inclusive = false }
-                    }
+                    navController.navigate("diary_detail_screen/${entry.date}")
 
                 },
                 onNavigateToSettings = {
@@ -205,11 +200,10 @@ fun StartNavigation(
                 type = NavType.StringType
             })
         ) { backStackEntry ->
-            val id = backStackEntry.arguments!!.getString("userId")!!
             SettingsScreen(
                 onNavigateToIntro = {
                     navController.navigate("intro_screen") {
-                        popUpTo("settings_screen/$id") { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onNavigateToLicense = { navController.navigate("license_screen") }

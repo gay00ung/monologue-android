@@ -10,24 +10,20 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.flow.firstOrNull
 import net.ifmain.monologue.BuildConfig
 import net.ifmain.monologue.data.api.DiaryApi
 import net.ifmain.monologue.data.preference.UserPreferenceManager
 import okhttp3.CookieJar
 import okhttp3.Interceptor
-import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
-import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.net.CookieManager
-import java.net.CookiePolicy
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
     @Provides
     @Singleton
     fun provideCookieJar(
@@ -37,49 +33,29 @@ object AppModule {
         SharedPrefsCookiePersistor(ctx)
     )
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideOkHttpClient(
-        cookieJar: CookieJar,
-        userPrefs: UserPreferenceManager
+        cookieJar: CookieJar
     ): OkHttpClient {
-        val saveCookieInterceptor = Interceptor { chain ->
-            val response = chain.proceed(chain.request())
-            val cookies = response.headers("Set-Cookie")
-            if (cookies.isNotEmpty()) {
-                val cookieString = cookies.joinToString(";")
-                kotlinx.coroutines.runBlocking {
-                    userPrefs.saveCookie(cookieString)
-                }
-            }
-            response
-        }
+        val loggingInterceptor = Interceptor { chain ->
+            val request = chain.request()
+            val response = chain.proceed(request)
 
-        val addCookieInterceptor = Interceptor { chain ->
-            val orig = chain.request()
-            val saved = kotlinx.coroutines.runBlocking { userPrefs.cookieFlow.firstOrNull() }
-            val req = if (!saved.isNullOrBlank()) {
-                orig.newBuilder()
-                    .header("Cookie", saved)
-                    .build()
-            } else orig
-            chain.proceed(req)
+            Log.d("NET-REQ", "${request.method} ${request.url}")
+            Log.d("NET-REQ-HEADERS", request.headers.toString())
+            Log.d("NET-RES", "Set-Cookie: ${response.headers("Set-Cookie")}")
+            return@Interceptor response
         }
 
         return OkHttpClient.Builder()
             .cookieJar(cookieJar)
-            .addInterceptor(saveCookieInterceptor)
-            .addInterceptor(addCookieInterceptor)
-            .addNetworkInterceptor { chain ->
-                val req = chain.request()
-                val res = chain.proceed(req)
-                Log.d("NET-REQ", "${req.method} ${req.url}")
-                Log.d("NET-RES", "Set-Cookie: ${res.headers("Set-Cookie")}")
-                res
-            }
+            .addNetworkInterceptor(loggingInterceptor)
             .build()
     }
 
-    @Provides @Singleton
+    @Provides
+    @Singleton
     fun provideRetrofit(client: OkHttpClient): Retrofit =
         Retrofit.Builder()
             .client(client)
@@ -89,13 +65,13 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDiaryApi(
-        retrofit: Retrofit
-    ): DiaryApi = retrofit.create(DiaryApi::class.java)
+    fun provideDiaryApi(retrofit: Retrofit): DiaryApi =
+        retrofit.create(DiaryApi::class.java)
 
     @Provides
     @Singleton
     fun provideUserPreferenceManager(
-        @ApplicationContext ctx: Context
-    ): UserPreferenceManager = UserPreferenceManager(ctx)
+        @ApplicationContext context: Context
+    ): UserPreferenceManager = UserPreferenceManager(context)
+
 }
