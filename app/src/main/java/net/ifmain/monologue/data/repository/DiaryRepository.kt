@@ -99,10 +99,7 @@ class DiaryRepository @Inject constructor(
     suspend fun syncFromServer(userId: String) {
         try {
             val remoteEntries = api.getDiaries(userId)
-            Log.d("syncFromServer", "Fetched ${remoteEntries.size} entries from server")
-            Log.d("syncFromServer", "Server response: $remoteEntries")
             val entries = remoteEntries.map { dto ->
-                Log.d("syncFromServer", "Received entry with userId=${dto.userId}, date=${dto.date}, text=${dto.text}, mood=${dto.mood}")
                 DiaryEntry(
                     date = dto.date,
                     userId = dto.userId,
@@ -114,7 +111,6 @@ class DiaryRepository @Inject constructor(
 
             entries.forEach { entry ->
                 dao.insert(entry)
-                Log.d("syncFromServer", "Inserted entry for date=${entry.date}")
             }
         } catch (e: Exception) {
             Log.e("syncFromServer", "Error syncing from server", e)
