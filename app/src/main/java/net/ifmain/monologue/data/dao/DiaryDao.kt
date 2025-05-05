@@ -26,7 +26,7 @@ interface DiaryDao {
     suspend fun markAsSynced(date: String)
 
     @Query("SELECT * FROM diary_entries WHERE isSynced = 0 AND userId = :userId")
-    fun getUnsynced(userId: String): List<DiaryEntry>
+    suspend fun getUnsynced(userId: String): List<DiaryEntry>
 
     @androidx.room.Transaction
     suspend fun insertAndMarkSynced(entry: DiaryEntry) {

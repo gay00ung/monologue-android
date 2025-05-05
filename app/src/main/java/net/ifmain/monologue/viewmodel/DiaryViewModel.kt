@@ -31,14 +31,16 @@ class DiaryViewModel @Inject constructor(
     fun initialize(userId: String) {
         this.userId = userId
         loadUserEntries(userId)
-        syncOfflineEntries()
     }
 
     fun loadUserEntries(userId: String) {
         viewModelScope.launch {
+            syncOfflineEntries()
+            repository.syncFromServer(userId)
             repository.getEntries(userId).collect { fetchedEntries ->
                 diaryEntries.value = fetchedEntries
             }
+            Log.d("DiaryViewModel", "Entries loaded: ${diaryEntries.value.size}")
         }
     }
 

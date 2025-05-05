@@ -33,9 +33,16 @@ fun DiaryListScreen(
 ) {
     val entries by viewModel.diaryEntries.collectAsStateWithLifecycle()
 
+    LaunchedEffect(entries) {
+        Log.d("DiaryListScreen", "Current entries: $entries")
+        Log.d("DiaryListScreen", "Entry count: ${entries.size}")
+    }
+
+
     LaunchedEffect(userId) {
         viewModel.initialize(userId)
         Log.d("DiaryListScreen", "User ID: $userId")
+        Log.d("DiaryListScreen", "Entries loaded: ${viewModel.diaryEntries.value.size}")
     }
 
     Scaffold(

@@ -73,26 +73,18 @@ fun DiaryScreen(
         listOf("😊", "😐", "😢", "😡", "😴", "😍", "😩", "🥳", "🫩", "🤢", "😷", "🤩", "😆", "😋", "🤒", "❓")
     var showDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
-    val entries by viewModel.diaryEntries.collectAsState()
 
     LaunchedEffect(userId) {
         if (userId.isNotBlank()) {
             viewModel.initialize(userId)
-            Log.d("DiaryScreen", "User ID: $userId")
-            Log.d("DiaryScreen", "DiaryEntry: $entries")
         }
     }
 
     LaunchedEffect(diaryEntry) {
         if (diaryEntry != null) {
-            Log.d("DiaryScreen", "DiaryEntry: $diaryEntry")
-            Log.d("DiaryScreen", "DiaryEntry text: ${diaryEntry.text}")
-            Log.d("DiaryScreen", "DiaryEntry mood: ${diaryEntry.mood}")
             viewModel.onTextChange(diaryEntry.text)
             viewModel.onMoodSelect(diaryEntry.mood ?: "❓")
         }
-        Log.d("DiaryScreen", "DiaryEntry: $diaryEntry")
-        Log.d("DiaryScreen", "DiaryEntry userId: ${diaryEntry?.userId}")
     }
 
     Scaffold(
