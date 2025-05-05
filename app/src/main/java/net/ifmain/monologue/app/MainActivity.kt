@@ -115,6 +115,7 @@ fun StartNavigation(
                     userId = id
                     navController.navigate("diary_write_screen/$userId") {
                         popUpTo("sign_up_screen") { inclusive = true }
+                        popUpTo("intro_screen") { inclusive = true }
                     }
                 },
             )
@@ -165,7 +166,10 @@ fun StartNavigation(
                 viewModel = diaryViewModel,
                 userId = userId,
                 onNavigateToDiaryDetail = { entry ->
-                    navController.navigate("diary_detail_screen/${entry.date}")
+                    navController.navigate("diary_detail_screen/${entry.date}") {
+                        popUpTo("diary_write_screen/${userId}") { inclusive = false }
+                    }
+
                 },
                 onNavigateToSettings = {
                     navController.navigate("settings_screen/$userId")
