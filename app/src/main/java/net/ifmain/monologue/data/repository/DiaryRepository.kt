@@ -3,6 +3,7 @@ package net.ifmain.monologue.data.repository
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import net.ifmain.monologue.data.api.DiaryApi
 import net.ifmain.monologue.data.dao.DiaryDao
@@ -15,7 +16,7 @@ class DiaryRepository @Inject constructor(
     private val dao: DiaryDao,
     internal val api: DiaryApi
 ) {
-    fun getEntries(): Flow<List<DiaryEntry>> = dao.getAll()
+    fun getEntries(userId: String): Flow<List<DiaryEntry>> = dao.getByUser(userId)
 
     suspend fun saveEntry(entry: DiaryEntry, userId: String) {
         dao.insert(entry)
@@ -72,7 +73,7 @@ class DiaryRepository @Inject constructor(
 
     suspend fun syncUnsyncedEntries(userId: String) {
         val unsyncedEntries = withContext(Dispatchers.IO) {
-            dao.getUnsynced()
+            dao.getUnsynced(userId)
         }
         for (entry in unsyncedEntries) {
             try {
@@ -92,6 +93,27 @@ class DiaryRepository @Inject constructor(
             } catch (e: Exception) {
                 Log.e("DiaryRepository", "Error syncing diary for date=${entry.date}", e)
             }
+        }
+    }
+
+    suspend fun syncFromServer(userId: String) {
+        try {
+            val remoteEntries = api.getDiaries(userId)
+            val entries = remoteEntries.map { dto ->
+                DiaryEntry(
+                    date = dto.date,
+                    userId = dto.userId,
+                    text = dto.text,
+                    mood = dto.mood,
+                    isSynced = true
+                )
+            }
+
+            entries.forEach { entry ->
+                dao.insert(entry)
+            }
+        } catch (e: Exception) {
+            Log.e("syncFromServer", "Error syncing from server", e)
         }
     }
 }

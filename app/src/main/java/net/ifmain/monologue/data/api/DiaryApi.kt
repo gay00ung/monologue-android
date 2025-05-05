@@ -1,6 +1,7 @@
 package net.ifmain.monologue.data.api
 
 import net.ifmain.monologue.data.model.DiaryEntryDto
+import net.ifmain.monologue.data.model.EmailCheckResponse
 import net.ifmain.monologue.data.model.UserDto
 import net.ifmain.monologue.data.model.UserEntryDto
 import net.ifmain.monologue.data.model.UserResponse
@@ -17,6 +18,9 @@ interface DiaryApi {
 
     @POST("api/users/login")
     suspend fun postSignIn(@Body request: UserDto): Response<UserResponse>
+
+    @GET("api/users/check-email")
+    suspend fun checkEmailAvailability(@Query("email") email: String): Response<EmailCheckResponse>
 
     @POST("/api/diary")
     suspend fun postDiary(@Body entry: DiaryEntryDto): Response<Unit>

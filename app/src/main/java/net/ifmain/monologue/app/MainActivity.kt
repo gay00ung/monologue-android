@@ -87,7 +87,9 @@ fun StartNavigation(
                 viewModel = signInViewModel,
                 onSignInClick = { name, id ->
                     userId = id
-                    navController.navigate("diary_home_screen")
+                    navController.navigate("diary_write_screen") {
+                        popUpTo("diary_write_screen") { inclusive = true }
+                    }
                 }
             )
         }
@@ -98,7 +100,9 @@ fun StartNavigation(
                 viewModel = signUpViewModel,
                 onNavigateToMain = { name, id ->
                     userId = id
-                    navController.navigate("diary_home_screen")
+                    navController.navigate("diary_write_screen") {
+                        popUpTo("diary_write_screen") { inclusive = true }
+                    }
                 },
             )
         }
@@ -107,6 +111,7 @@ fun StartNavigation(
             diaryViewModel.userId = userId ?: ""
             diaryViewModel.syncOfflineEntries()
             DiaryScreen(
+                userId = diaryViewModel.userId,
                 viewModel = diaryViewModel,
                 onTextChange = diaryViewModel::onTextChange,
                 onMoodSelect = diaryViewModel::onMoodSelect,
@@ -131,6 +136,7 @@ fun StartNavigation(
 
             DiaryListScreen(
                 viewModel = diaryViewModel,
+                userId = diaryViewModel.userId,
                 onNavigateToDiaryDetail = { entry ->
                     navController.navigate("diary_detail_screen/${entry.date}")
                 }
@@ -141,10 +147,11 @@ fun StartNavigation(
             val date = backStackEntry.arguments!!.getString("date")!!
             val diaryViewModel: DiaryViewModel = hiltViewModel()
             diaryViewModel.userId = userId ?: ""
-            val entries by diaryViewModel.entries.collectAsStateWithLifecycle(initialValue = emptyList())
+            val entries by diaryViewModel.diaryEntries.collectAsStateWithLifecycle(initialValue = emptyList())
             val diaryEntry = entries.firstOrNull { it.date == date }
 
             DiaryScreen(
+                userId = diaryViewModel.userId,
                 diaryEntry = diaryEntry,
                 viewModel = diaryViewModel,
                 onTextChange = diaryViewModel::onTextChange,

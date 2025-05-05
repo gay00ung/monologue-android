@@ -19,11 +19,14 @@ interface DiaryDao {
     @Query("SELECT * FROM diary_entries ORDER BY date DESC")
     fun getAll(): Flow<List<DiaryEntry>>
 
+    @Query("SELECT * FROM diary_entries WHERE userId = :userId ORDER BY date DESC")
+    fun getByUser(userId: String): Flow<List<DiaryEntry>>
+
     @Query("UPDATE diary_entries SET isSynced = 1 WHERE date = :date")
     suspend fun markAsSynced(date: String)
 
-    @Query("SELECT * FROM diary_entries WHERE isSynced = 0")
-    fun getUnsynced(): List<DiaryEntry>
+    @Query("SELECT * FROM diary_entries WHERE isSynced = 0 AND userId = :userId")
+    suspend fun getUnsynced(userId: String): List<DiaryEntry>
 
     @androidx.room.Transaction
     suspend fun insertAndMarkSynced(entry: DiaryEntry) {

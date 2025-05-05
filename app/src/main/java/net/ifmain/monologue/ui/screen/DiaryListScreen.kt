@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,9 +27,14 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun DiaryListScreen(
     viewModel: DiaryViewModel,
+    userId: String,
     onNavigateToDiaryDetail: (DiaryEntry) -> Unit
 ) {
-    val entries by viewModel.entries.collectAsStateWithLifecycle()
+    val entries by viewModel.diaryEntries.collectAsStateWithLifecycle()
+
+    LaunchedEffect(userId) {
+        viewModel.initialize(userId)
+    }
 
     Scaffold(
         containerColor = Cream,

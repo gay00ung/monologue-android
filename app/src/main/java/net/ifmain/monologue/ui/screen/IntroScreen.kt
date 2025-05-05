@@ -1,6 +1,7 @@
 package net.ifmain.monologue.ui.screen
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
@@ -72,6 +73,7 @@ fun IntroScreen(
                 ).show()
                 viewModel.viewModelScope.launch {
                     val diaryExists = viewModel.checkDiaryExists(userId)
+                    Log.d("IntroScreen", "Diary exists: $diaryExists")
                     if (diaryExists) {
                         onNavigateToDiaryList(name, userId)
                     } else {

@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.LightGray
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -27,6 +28,9 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import net.ifmain.monologue.ui.component.InputCard
 import net.ifmain.monologue.ui.component.InputTextField
 import net.ifmain.monologue.ui.component.TitleBar
@@ -64,7 +68,24 @@ fun SignUpScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     InputCard {
-                        InputTextField("이메일", viewModel.email) { viewModel.email = it }
+                        InputTextField("이메일", viewModel.email) {
+                            viewModel.onEmailChanged(it)
+                        }
+                        if (viewModel.isCheckingEmail) {
+                            Text(
+                                text = "⏳ 이메일 중복 확인 중...",
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                        } else {
+                            viewModel.emailCheckMessage?.let {
+                                Text(
+                                    text = it,
+                                    fontSize = 12.sp,
+                                    color = if (it.contains("가능")) Color.Green else Color.Red
+                                )
+                            }
+                        }
                         InputTextField("사용자 이름", viewModel.username) { viewModel.username = it }
                         InputTextField(
                             "비밀번호",
@@ -85,30 +106,28 @@ fun SignUpScreen(
 
                     Button(
                         onClick = {
-                            when {
-                                viewModel.hasEmptyFields() -> {
-                                    Toast.makeText(context, "모든 항목을 입력해주세요.", Toast.LENGTH_SHORT)
-                                        .show()
-                                }
-
-                                else -> {
-                                    viewModel.signUp(
-                                        onSuccess = {
-                                            onNavigateToMain(
-                                                viewModel.username,
-                                                viewModel.userId
-                                            )
-
-                                            Log.d("SignUpViewModel", "Sending signup with: userId=${viewModel.userId}, username=${viewModel.username}, email=${viewModel.email}, password=${viewModel.password}")
-
-                                            Toast.makeText(context, "회원가입 성공!", Toast.LENGTH_SHORT)
-                                                .show()
-                                        },
-                                        onError = { errorMsg ->
-                                            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT)
-                                                .show()
-                                        }
-                                    )
+                            if (viewModel.hasEmptyFields()) {
+                                Toast.makeText(context, "모든 항목을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                            } else {
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    val isAvailable = viewModel.isEmailAvailable(viewModel.email)
+                                    if (!isAvailable) {
+                                        Toast.makeText(context, "이미 사용 중인 이메일입니다.", Toast.LENGTH_SHORT).show()
+                                        return@launch
+                                    } else {
+                                        viewModel.signUp(
+                                            onSuccess = {
+                                                onNavigateToMain(
+                                                    viewModel.username,
+                                                    viewModel.userId
+                                                )
+                                                Toast.makeText(context, "회원가입 성공!", Toast.LENGTH_SHORT).show()
+                                            },
+                                            onError = { errorMsg ->
+                                                Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         },

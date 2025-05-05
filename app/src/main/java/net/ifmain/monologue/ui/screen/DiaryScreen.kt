@@ -43,6 +43,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +58,7 @@ import net.ifmain.monologue.viewmodel.DiaryViewModel
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun DiaryScreen(
+    userId: String,
     diaryEntry: DiaryEntry? = null,
     viewModel: DiaryViewModel,
     onTextChange: (String) -> Unit,
@@ -71,6 +73,12 @@ fun DiaryScreen(
         listOf("😊", "😐", "😢", "😡", "😴", "😍", "😩", "🥳", "🫩", "🤢", "😷", "🤩", "😆", "😋", "🤒", "❓")
     var showDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
+
+    LaunchedEffect(userId) {
+        if (userId.isNotBlank()) {
+            viewModel.initialize(userId)
+        }
+    }
 
     LaunchedEffect(diaryEntry) {
         if (diaryEntry != null) {
