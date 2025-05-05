@@ -6,6 +6,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import net.ifmain.monologue.BuildConfig
 import net.ifmain.monologue.data.api.DiaryApi
 import net.ifmain.monologue.data.preference.UserPreferenceManager
 import retrofit2.Retrofit
@@ -20,7 +21,7 @@ object AppModule {
     @Singleton
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://192.168.45.27:8080/")
+            .baseUrl(BuildConfig.BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }

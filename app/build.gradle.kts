@@ -7,6 +7,10 @@ plugins {
     id("com.google.dagger.hilt.android")
 }
 
+val baseUrlProp = "BASE_URL"
+val BASE_URL: String = (project.findProperty(baseUrlProp) as? String)
+    ?: error("$baseUrlProp is not defined")
+
 android {
     namespace = "net.ifmain.monologue"
     compileSdk = 35
@@ -19,6 +23,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "BASE_URL", "\"$BASE_URL\"")
     }
 
     signingConfigs {
@@ -52,6 +57,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
