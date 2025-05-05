@@ -17,6 +17,7 @@ class AuthViewModel @Inject constructor(
     fun logout(onComplete: () -> Unit) {
         viewModelScope.launch {
             api.postLogout()
+            userPrefs.clearCookie()
             userPrefs.clearSession()
             onComplete()
         }
@@ -27,6 +28,7 @@ class AuthViewModel @Inject constructor(
             try {
                 val resp = api.deleteUser()
                 if (resp.isSuccessful) {
+                    userPrefs.clearCookie()
                     userPrefs.clearSession()
                     onSuccess()
                 } else {

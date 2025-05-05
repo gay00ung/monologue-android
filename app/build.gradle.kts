@@ -113,6 +113,7 @@ dependencies {
     implementation (libs.androidx.hilt.navigation.compose)
 
     implementation (libs.okhttp)
+    implementation(libs.okhttp.urlconnection)
     implementation (libs.persistentcookiejar)
     implementation (libs.converter.moshi)
 }

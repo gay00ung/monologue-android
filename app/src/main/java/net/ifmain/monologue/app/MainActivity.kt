@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +32,8 @@ import net.ifmain.monologue.viewmodel.IntroViewModel
 import net.ifmain.monologue.viewmodel.SignInViewModel
 import net.ifmain.monologue.viewmodel.SignUpViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import net.ifmain.monologue.ui.screen.LicenseScreen
 import net.ifmain.monologue.ui.screen.SettingsScreen
 
@@ -68,14 +71,14 @@ fun StartNavigation(
                 onSignUpClick = { navController.navigate("sign_up_screen") },
                 onNavigateToDiaryScreen = { name, id ->
                     userId = id
-                    navController.navigate("diary_write_screen") {
-                        popUpTo("diary_write_screen") { inclusive = true }
+                    navController.navigate("diary_write_screen/$userId") {
+                        popUpTo("intro_screen") { inclusive = true }
                     }
                 },
                 onNavigateToDiaryList = { name, id ->
                     userId = id
-                    navController.navigate("diary_list_screen") {
-                        popUpTo("diary_list_screen") { inclusive = true }
+                    navController.navigate("diary_list_screen/$userId") {
+                        popUpTo("intro_screen") { inclusive = true }
                     }
                 },
                 viewModel = introViewModel
@@ -89,14 +92,16 @@ fun StartNavigation(
                 introViewModel = hiltViewModel(),
                 onNavigateToDiaryScreen = { name, id ->
                     userId = id
-                    navController.navigate("diary_write_screen") {
-                        popUpTo("diary_write_screen") { inclusive = true }
+                    navController.navigate("diary_write_screen/$userId") {
+                        popUpTo("sign_in_screen") { inclusive = true }
+                        popUpTo("intro_screen") { inclusive = true }
                     }
                 },
                 onNavigateToDiaryList = { name, id ->
                     userId = id
-                    navController.navigate("diary_list_screen") {
-                        popUpTo("diary_list_screen") { inclusive = true }
+                    navController.navigate("diary_list_screen/$userId") {
+                        popUpTo("sign_in_screen") { inclusive = true }
+                        popUpTo("intro_screen") { inclusive = true }
                     }
                 },
             )
@@ -108,16 +113,20 @@ fun StartNavigation(
                 viewModel = signUpViewModel,
                 onNavigateToMain = { name, id ->
                     userId = id
-                    navController.navigate("diary_write_screen") {
-                        popUpTo("diary_write_screen") { inclusive = true }
+                    navController.navigate("diary_write_screen/$userId") {
+                        popUpTo("sign_up_screen") { inclusive = true }
                     }
                 },
             )
         }
-        composable("diary_write_screen") {
+        composable(
+            route = "diary_write_screen/{userId}",
+            arguments = listOf(navArgument("userId") {
+                type = NavType.StringType
+            })
+        ) { backStackEntry ->
             val diaryViewModel: DiaryViewModel = hiltViewModel()
             diaryViewModel.userId = userId ?: ""
-            diaryViewModel.syncOfflineEntries()
             DiaryScreen(
                 userId = diaryViewModel.userId,
                 viewModel = diaryViewModel,
@@ -134,22 +143,32 @@ fun StartNavigation(
                         }
                     )
                 },
-                onNavigateToDiaryList = { navController.navigate("diary_list_screen") }
+                onNavigateToDiaryList = {
+                    navController.navigate("diary_list_screen/${diaryViewModel.userId}") {
+                        popUpTo("diary_write_screen/${diaryViewModel.userId}") { inclusive = true }
+                    }
+                }
             )
         }
 
-        composable("diary_list_screen") {
+        composable(
+            "diary_list_screen/{userId}",
+            arguments = listOf(navArgument("userId") {
+                type = NavType.StringType
+            })
+        ) { backStackEntry ->
             val diaryViewModel: DiaryViewModel = hiltViewModel()
             diaryViewModel.userId = userId ?: ""
+            val userId = backStackEntry.arguments!!.getString("userId")!!
 
             DiaryListScreen(
                 viewModel = diaryViewModel,
-                userId = diaryViewModel.userId,
+                userId = userId,
                 onNavigateToDiaryDetail = { entry ->
                     navController.navigate("diary_detail_screen/${entry.date}")
                 },
                 onNavigateToSettings = {
-                    navController.navigate("settings_screen")
+                    navController.navigate("settings_screen/$userId")
                 }
             )
         }
@@ -176,9 +195,19 @@ fun StartNavigation(
             )
         }
 
-        composable ("settings_screen") {
+        composable(
+            route = "settings_screen/{userId}",
+            arguments = listOf(navArgument("userId") {
+                type = NavType.StringType
+            })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments!!.getString("userId")!!
             SettingsScreen(
-                onNavigateToIntro = { navController.navigate("intro_screen") },
+                onNavigateToIntro = {
+                    navController.navigate("intro_screen") {
+                        popUpTo("settings_screen/$id") { inclusive = true }
+                    }
+                },
                 onNavigateToLicense = { navController.navigate("license_screen") }
             )
         }
@@ -189,19 +218,18 @@ fun StartNavigation(
     }
 
     BackHandler {
-        val currentTime = System.currentTimeMillis()
-        when (navController.currentDestination?.route) {
-            "intro_screen", "diary_write_screen", "diary_list_screen" -> {
-                if (currentTime - backPressedTime < 2000) {
-                    (context as? ComponentActivity)?.finish()
-                } else {
-                    Toast.makeText(context, "뒤로가기를 한 번 더 누르면 앱이 종료됩니다.", Toast.LENGTH_SHORT).show()
-                    backPressedTime = currentTime
-                }
-            }
-
-            else -> {
-                navController.popBackStack()
+        val didPop = navController.popBackStack()
+        if (!didPop) {
+            val currentTime = System.currentTimeMillis()
+            if (currentTime - backPressedTime < 2_000) {
+                (context as? ComponentActivity)?.finish()
+            } else {
+                Toast.makeText(
+                    context,
+                    "뒤로가기를 한 번 더 누르면 앱이 종료됩니다.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                backPressedTime = currentTime
             }
         }
     }

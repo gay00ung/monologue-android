@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.ifmain.monologue.data.api.DiaryApi
 import net.ifmain.monologue.data.model.UserDto
@@ -24,19 +25,18 @@ class IntroViewModel @Inject constructor(
     var userId by mutableStateOf("")
 
 
-    fun checkAutoLogin(onAutoLoginSuccess: (String, String) -> Unit, onLoginFail: () -> Unit) {
+    fun checkAutoLogin(
+        onAutoLoginSuccess: (userId: String, userName: String) -> Unit,
+        onLoginFail: () -> Unit
+    ) {
         viewModelScope.launch {
-            try {
-                val resp = api.getCurrentUser()
-                if (resp.isSuccessful && resp.body() != null) {
-                    val u = resp.body()!!
-                    userPrefs.saveSession(u.id, u.name.toString())
-                    onAutoLoginSuccess(u.id, u.name.toString())
-                } else {
-                    isButtonVisible.value = true; onLoginFail()
-                }
-            } catch (e: Exception) {
-                isButtonVisible.value = true; onLoginFail()
+            val (storedId, storedName) = userPrefs.sessionFlow.first()
+
+            if (!storedId.isNullOrEmpty()) {
+                onAutoLoginSuccess(storedId, storedName.orEmpty())
+            } else {
+                isButtonVisible.value = true
+                onLoginFail()
             }
         }
     }
