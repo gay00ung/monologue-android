@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.ifmain.monologue.data.api.DiaryApi
 import net.ifmain.monologue.data.model.UserDto
@@ -22,35 +23,20 @@ class IntroViewModel @Inject constructor(
     var isButtonVisible = mutableStateOf(false)
         private set
     var userId by mutableStateOf("")
-    var userName by mutableStateOf("")
 
-    fun checkAutoLogin(onAutoLoginSuccess: (String, String) -> Unit, onLoginFail: () -> Unit) {
+
+    fun checkAutoLogin(
+        onAutoLoginSuccess: (userId: String, userName: String) -> Unit,
+        onLoginFail: () -> Unit
+    ) {
         viewModelScope.launch {
-            userPrefs.userInfoFlow.collect { (email, password) ->
-                if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
-                    try {
-                        val response = api.postSignIn(UserDto(userId, userName, email, password))
-                        if (response.isSuccessful && response.body() != null) {
-                            val body = response.body()
-                            userId = body?.id.toString()
-                            userName = body?.name.toString()
-                            val diaryExists = checkDiaryExists(userId)
-                            if (diaryExists) {
-                                onAutoLoginSuccess(userName, userId)
-                            } else {
-                                onAutoLoginSuccess(userName, userId)
-                            }
-                        } else {
-                            isButtonVisible.value = true
-                            onLoginFail()
-                        }
-                    } catch (e: Exception) {
-                        isButtonVisible.value = true
-                        onLoginFail()
-                    }
-                } else {
-                    isButtonVisible.value = true
-                }
+            val (storedId, storedName) = userPrefs.sessionFlow.first()
+
+            if (!storedId.isNullOrEmpty()) {
+                onAutoLoginSuccess(storedId, storedName.orEmpty())
+            } else {
+                isButtonVisible.value = true
+                onLoginFail()
             }
         }
     }

@@ -1,6 +1,8 @@
 package net.ifmain.monologue.ui.screen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,6 +13,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.LightGray
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -23,12 +29,14 @@ import net.ifmain.monologue.ui.theme.Lemon
 import net.ifmain.monologue.viewmodel.DiaryViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import net.ifmain.monologue.R
 
 @Composable
 fun DiaryListScreen(
     viewModel: DiaryViewModel,
     userId: String,
-    onNavigateToDiaryDetail: (DiaryEntry) -> Unit
+    onNavigateToDiaryDetail: (DiaryEntry) -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     val entries by viewModel.diaryEntries.collectAsStateWithLifecycle()
 
@@ -39,7 +47,41 @@ fun DiaryListScreen(
     Scaffold(
         containerColor = Cream,
         topBar = {
-            TitleBar()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Spacer(modifier = Modifier.width(48.dp))
+                Box(
+                    modifier = Modifier
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    TitleBar()
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(top = 32.dp, end = 16.dp)
+                        .pointerInput(Unit) {
+                            detectTapGestures {
+                                onNavigateToSettings()
+                            }
+                        }
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.setting),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .align(Alignment.Center),
+                        colorFilter = ColorFilter.tint(LightGray)
+                    )
+                }
+            }
+
+
         }
     ) { innerPadding ->
         LazyColumn(

@@ -7,6 +7,7 @@ import net.ifmain.monologue.data.model.UserEntryDto
 import net.ifmain.monologue.data.model.UserResponse
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -21,6 +22,15 @@ interface DiaryApi {
 
     @GET("api/users/check-email")
     suspend fun checkEmailAvailability(@Query("email") email: String): Response<EmailCheckResponse>
+
+    @GET("api/users/logout")
+    suspend fun postLogout(): Response<Unit>
+
+    @DELETE("api/users/withdraw")
+    suspend fun deleteUser(): Response<Unit>
+
+    @GET("/api/users/me")
+    suspend fun getCurrentUser(): Response<UserResponse>
 
     @POST("/api/diary")
     suspend fun postDiary(@Body entry: DiaryEntryDto): Response<Unit>

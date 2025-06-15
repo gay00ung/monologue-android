@@ -1,5 +1,7 @@
 package net.ifmain.monologue.ui.screen.auth
 
+import android.annotation.SuppressLint
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +17,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,21 +25,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 import net.ifmain.monologue.ui.component.InputCard
 import net.ifmain.monologue.ui.component.InputTextField
 import net.ifmain.monologue.ui.component.TitleBar
 import net.ifmain.monologue.ui.theme.Cream
 import net.ifmain.monologue.ui.theme.Honey
+import net.ifmain.monologue.viewmodel.IntroViewModel
 import net.ifmain.monologue.viewmodel.SignInViewModel
 
+@SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignInScreen(
-    viewModel: SignInViewModel = hiltViewModel(),
-    onSignInClick: (name: String, userId: String) -> Unit,
+    signInViewModel: SignInViewModel = hiltViewModel(),
+    introViewModel: IntroViewModel = hiltViewModel(),
+    onNavigateToDiaryScreen: (name: String, userId: String) -> Unit,
+    onNavigateToDiaryList: (name: String, userId: String) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
@@ -65,34 +71,41 @@ fun SignInScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     InputCard {
-                        InputTextField("이메일", viewModel.email) { viewModel.email = it }
+                        InputTextField("이메일", signInViewModel.email) { signInViewModel.email = it }
                         InputTextField(
                             "비밀번호",
-                            viewModel.password,
+                            signInViewModel.password,
                             isPassword = true
-                        ) { viewModel.password = it }
+                        ) { signInViewModel.password = it }
                     }
 
                     Button(
                         onClick = {
                             when {
-                                viewModel.hasEmptyFields() -> {
+                                signInViewModel.hasEmptyFields() -> {
                                     Toast.makeText(context, "모든 항목을 입력해주세요.", Toast.LENGTH_SHORT)
                                         .show()
                                 }
 
                                 else -> {
-                                    viewModel.signIn(
-                                        onSuccess = { name ->
-                                            Toast.makeText(
-                                                context,
-                                                "${name}님 환영합니다!",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            onSignInClick(name, viewModel.userId)
+                                    signInViewModel.signIn(
+                                        onSuccess = { userId, userName ->
+                                            Toast
+                                                .makeText(context, "$userName 님 환영합니다!", Toast.LENGTH_SHORT)
+                                                .show()
+                                            signInViewModel.viewModelScope.launch {
+                                                val diaryExists = introViewModel.checkDiaryExists(userId)
+                                                Log.d("IntroScreen", "Diary exists: $diaryExists")
+                                                if (diaryExists) {
+                                                    onNavigateToDiaryList(userName, userId)
+                                                } else {
+                                                    onNavigateToDiaryScreen(userName, userId)
+                                                }
+                                            }
                                         },
                                         onError = { errorMsg ->
-                                            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT)
+                                            Toast
+                                                .makeText(context, errorMsg, Toast.LENGTH_SHORT)
                                                 .show()
                                         }
                                     )

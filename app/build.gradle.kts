@@ -3,9 +3,13 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
-    id("kotlin-kapt")
+    id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
 }
+
+val baseUrlProp = "BASE_URL"
+val BASE_URL: String = (project.findProperty(baseUrlProp) as? String)
+    ?: error("$baseUrlProp is not defined")
 
 android {
     namespace = "net.ifmain.monologue"
@@ -15,10 +19,11 @@ android {
         applicationId = "net.ifmain.monologue"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
+        versionCode = 3
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "BASE_URL", "\"$BASE_URL\"")
     }
 
     signingConfigs {
@@ -52,11 +57,11 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -77,17 +82,15 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     // Room
-    val room_version = "2.6.1"
-
-    implementation("androidx.room:room-runtime:$room_version")
-    annotationProcessor("androidx.room:room-compiler:$room_version")
-    implementation("androidx.room:room-ktx:$room_version")
-    implementation("androidx.room:room-rxjava2:$room_version")
-    implementation("androidx.room:room-rxjava3:$room_version")
-    implementation("androidx.room:room-guava:$room_version")
-    testImplementation("androidx.room:room-testing:$room_version")
-    implementation("androidx.room:room-paging:$room_version")
-    kapt ("androidx.room:room-compiler:$room_version")
+    implementation(libs.androidx.room.runtime)
+    annotationProcessor(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.rxjava2)
+    implementation(libs.androidx.room.rxjava3)
+    implementation(libs.androidx.room.guava)
+    testImplementation(libs.androidx.room.testing)
+    implementation(libs.androidx.room.paging)
+    ksp (libs.androidx.room.compiler)
 
     // Retrofit
     implementation(libs.retrofit)
@@ -102,14 +105,15 @@ dependencies {
 
     // hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
+    ksp(libs.hilt.android.compiler)
     annotationProcessor(libs.androidx.hilt.compiler.v120)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation (libs.androidx.hilt.navigation.compose)
-}
 
-kapt {
-    correctErrorTypes = true
+    implementation (libs.okhttp)
+    implementation(libs.okhttp.urlconnection)
+    implementation (libs.persistentcookiejar)
+    implementation (libs.converter.moshi)
 }
 
 androidComponents {

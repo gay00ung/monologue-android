@@ -59,13 +59,13 @@ fun IntroScreen(
     var isLogoCentered by remember { mutableStateOf(true) }
     val isButtonVisible by viewModel.isButtonVisible
 
-    val appName = stringResource(R.string.app_name)
+    val appName = stringResource(R.string.app_logo)
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         delay(2000)
         viewModel.checkAutoLogin(
-            onAutoLoginSuccess = { name, userId ->
+            onAutoLoginSuccess = { userId, name ->
                 Toast.makeText(
                     context,
                     "${name}님 환영합니다!",

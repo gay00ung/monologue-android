@@ -8,21 +8,24 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.ifmain.monologue.data.model.DiaryEntry
 import net.ifmain.monologue.data.model.DiaryEntryDto
 import net.ifmain.monologue.data.model.DiaryUiState
+import net.ifmain.monologue.data.preference.UserPreferenceManager
 import net.ifmain.monologue.data.repository.DiaryRepository
 import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
 class DiaryViewModel @Inject constructor(
-    private val repository: DiaryRepository
+    private val repository: DiaryRepository,
+    private val userPrefs: UserPreferenceManager
 ) : ViewModel() {
     var uiState by mutableStateOf(DiaryUiState())
         private set
-    var userId by mutableStateOf<String>("")
+    var userId by mutableStateOf("")
     var isSaving by mutableStateOf(false)
 
     val diaryEntries = MutableStateFlow<List<DiaryEntry>>(emptyList())
@@ -33,12 +36,18 @@ class DiaryViewModel @Inject constructor(
     }
 
     fun loadUserEntries(userId: String) {
+        this.userId = userId
         viewModelScope.launch {
-            syncOfflineEntries()
+            Log.d("DiaryViewModel", "Loading entries for userId: $userId")
+            Log.d("DiaryViewModel", "#1. Syncing unsynced entries")
+            repository.syncUnsyncedEntries(userId)
+            Log.d("DiaryViewModel", "#2. Syncing from server")
             repository.syncFromServer(userId)
-            repository.getEntries(userId).collect { fetchedEntries ->
-                diaryEntries.value = fetchedEntries
-            }
+            Log.d("DiaryViewModel", "#3. Fetching entries from local DB")
+            repository.getEntries(userId)
+                .collect { list ->
+                    diaryEntries.value = list
+                }
         }
     }
 
@@ -63,19 +72,19 @@ class DiaryViewModel @Inject constructor(
         val finalText = if (uiState.text.isBlank()) "기록없음" else uiState.text
         println("💾 저장됨: 텍스트=$finalText, 감정=${uiState.selectedMood}")
 
-        val currentUserId = userId
         Log.d(
             "DiaryViewModel",
             "onSaveClick triggered with mood=${uiState.selectedMood} and text=$finalText"
         )
 
-        if (currentUserId.isBlank()) {
-            onError("유저 정보가 없습니다.")
-            isSaving = false
-            return
-        }
-
         viewModelScope.launch {
+            val session = userPrefs.sessionFlow.first()
+            val currentUserId = session.first ?: ""
+            if (currentUserId.isBlank()) {
+                onError("유저 정보가 없습니다.")
+                return@launch
+            }
+
             try {
                 val entryExists = repository.checkDiaryExists(currentUserId)
                 if (entryExists) {
@@ -144,16 +153,6 @@ class DiaryViewModel @Inject constructor(
 
     fun onAnalyzeClick() {
         // TODO: 감정 분석 API 호출 후 상태 업데이트
-    }
-
-    fun syncOfflineEntries() {
-        viewModelScope.launch {
-            try {
-                repository.syncUnsyncedEntries(userId)
-            } catch (e: Exception) {
-                Log.e("DiaryViewModel", "Error syncing offline entries", e)
-            }
-        }
     }
 }
 

@@ -15,7 +15,7 @@ import net.ifmain.monologue.ui.theme.Honey
 
 @Composable
 fun TitleBar() {
-    val appName = stringResource(R.string.app_name)
+    val appName = stringResource(R.string.app_logo)
 
     Text(
         text = appName,

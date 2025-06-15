@@ -53,6 +53,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import net.ifmain.monologue.data.model.DiaryEntry
+import net.ifmain.monologue.ui.component.ShowDialog
 import net.ifmain.monologue.viewmodel.DiaryViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -213,81 +214,20 @@ fun DiaryScreen(
             }
 
             if (showDialog) {
-                AlertDialog(
-                    onDismissRequest = { showDialog = false },
-                    shape = RoundedCornerShape(16.dp),
-                    containerColor = Cream,
-                    icon = {
-                        Text(
-                            text = "📝",
-                            fontSize = MaterialTheme.typography.headlineLarge.fontSize,
-                            color = MaterialTheme.colorScheme.primary
+                ShowDialog(
+                    title = "오늘은 이미 등록하셨습니다.",
+                    text = "저장된 내용을 수정하시겠어요?",
+                    onConfirm = {
+                        viewModel.updateDiary(
+                            uiState, viewModel.userId,
+                            diaryEntry?.date.toString()
                         )
+                        Toast.makeText(context, "수정되었습니다!", Toast.LENGTH_SHORT).show()
+                        showDialog = false
+                        onNavigateToDiaryList()
                     },
-                    title = {
-                        Text(
-                            text = "오늘은 이미 등록하셨습니다.",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Lemon,
-                                textAlign = TextAlign.Center
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    },
-                    text = {
-                        Text(
-                            text = "저장된 내용을 수정하시겠어요?",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                color = Color.DarkGray,
-                                textAlign = TextAlign.Center
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                viewModel.updateDiary(
-                                    uiState, viewModel.userId,
-                                    diaryEntry?.date.toString()
-                                )
-                                Toast.makeText(context, "수정되었습니다!", Toast.LENGTH_SHORT).show()
-                                showDialog = false
-                                onNavigateToDiaryList()
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.padding(8.dp),
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = Color.White,
-                                containerColor = Lemon
-                            )
-                        ) {
-                            Text(
-                                text = "확인",
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(
-                            onClick = { showDialog = false },
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.padding(8.dp),
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = Color(0xFF9E9E9E),
-                                containerColor = Color.Transparent
-                            )
-                        ) {
-                            Text(
-                                text = "취소",
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                        }
+                    onDismiss = {
+                        showDialog = false
                     }
                 )
             }
