@@ -9,7 +9,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -216,18 +215,55 @@ fun StartNavigation(
     }
 
     BackHandler {
-        val didPop = navController.popBackStack()
-        if (!didPop) {
-            val currentTime = System.currentTimeMillis()
-            if (currentTime - backPressedTime < 2_000) {
-                (context as? ComponentActivity)?.finish()
-            } else {
-                Toast.makeText(
-                    context,
-                    "뒤로가기를 한 번 더 누르면 앱이 종료됩니다.",
-                    Toast.LENGTH_SHORT
-                ).show()
-                backPressedTime = currentTime
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+
+        when {
+            currentRoute == "sign_in_screen" || currentRoute == "sign_up_screen" -> {
+                navController.popBackStack("intro_screen", false)
+            }
+            currentRoute?.contains("settings_screen") == true ||
+                    currentRoute == "license_screen" ||
+                    currentRoute?.contains("diary_list_screen") == true -> {
+                val now = System.currentTimeMillis()
+                if (now - backPressedTime < 2_000) {
+                    (context as? ComponentActivity)?.finish()
+                } else {
+                    Toast.makeText(
+                        context,
+                        "뒤로가기를 한 번 더 누르면 앱이 종료됩니다.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    backPressedTime = now
+                }
+            }
+            listOf("intro_screen", "diary_write_screen", "sign_in_screen", "sign_up_screen")
+                .any { screen -> currentRoute?.contains(screen) == true } -> {
+                val now = System.currentTimeMillis()
+                if (now - backPressedTime < 2_000) {
+                    (context as? ComponentActivity)?.finish()
+                } else {
+                    Toast.makeText(
+                        context,
+                        "뒤로가기를 한 번 더 누르면 앱이 종료됩니다.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    backPressedTime = now
+                }
+            }
+            else -> {
+                if (!navController.popBackStack()) {
+                    val now = System.currentTimeMillis()
+                    if (now - backPressedTime < 2_000) {
+                        (context as? ComponentActivity)?.finish()
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "뒤로가기를 한 번 더 누르면 앱이 종료됩니다.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        backPressedTime = now
+                    }
+                }
             }
         }
     }
