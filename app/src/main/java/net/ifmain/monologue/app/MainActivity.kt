@@ -217,43 +217,24 @@ fun StartNavigation(
     BackHandler {
         val currentRoute = navController.currentBackStackEntry?.destination?.route
 
+        val now = System.currentTimeMillis()
+
+        val exitRoutes = listOf(
+            "intro_screen",
+            "diary_write_screen",
+            "sign_in_screen",
+            "sign_up_screen"
+        )
+
         when {
             currentRoute == "sign_in_screen" || currentRoute == "sign_up_screen" -> {
                 navController.popBackStack("intro_screen", false)
             }
-            currentRoute?.contains("settings_screen") == true ||
-                    currentRoute == "license_screen" ||
-                    currentRoute?.contains("diary_list_screen") == true -> {
-                val now = System.currentTimeMillis()
-                if (now - backPressedTime < 2_000) {
-                    (context as? ComponentActivity)?.finish()
-                } else {
-                    Toast.makeText(
-                        context,
-                        "뒤로가기를 한 번 더 누르면 앱이 종료됩니다.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    backPressedTime = now
-                }
-            }
-            listOf("intro_screen", "diary_write_screen", "sign_in_screen", "sign_up_screen")
-                .any { screen -> currentRoute?.contains(screen) == true } -> {
-                val now = System.currentTimeMillis()
-                if (now - backPressedTime < 2_000) {
-                    (context as? ComponentActivity)?.finish()
-                } else {
-                    Toast.makeText(
-                        context,
-                        "뒤로가기를 한 번 더 누르면 앱이 종료됩니다.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    backPressedTime = now
-                }
-            }
+
             else -> {
-                if (!navController.popBackStack()) {
-                    val now = System.currentTimeMillis()
-                    if (now - backPressedTime < 2_000) {
+                val popped = navController.popBackStack()
+                if (!popped || currentRoute in exitRoutes) {
+                    if (now - backPressedTime < 2000) {
                         (context as? ComponentActivity)?.finish()
                     } else {
                         Toast.makeText(
