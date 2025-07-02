@@ -150,4 +150,4 @@ Content-Type: application/json
 ## 👩‍💻 개발자
 - **신가영** ([GitHub](https://github.com/gay00ung))
 
-> 본 프로젝트는 실제 배포용으로 개발되었으며, Google Play를 통해 출시되었습니다.
+> 본 앱은 실제 배포용로 개발되어 [Google Play 스토어](https://play.google.com/store/apps/details?id=net.ifmain.monologue)에 실제 출시되었습니다.
